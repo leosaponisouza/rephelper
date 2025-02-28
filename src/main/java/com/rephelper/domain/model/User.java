@@ -25,8 +25,7 @@ public class User {
     private String profilePictureUrl;
     private String firebaseUid;
     private AuthProvider provider;
-    private UserRole role;
-    private UserStatus status;
+    private String status;
     private Republic currentRepublic;
     private Boolean isAdmin;
     private LocalDateTime entryDate;
@@ -38,22 +37,24 @@ public class User {
      * Provedor de autenticação usado pelo usuário
      */
     public enum AuthProvider {
-        EMAIL, GOOGLE, FACEBOOK, PHONE, GITHUB, CUSTOM
+        EMAIL("email"),
+        GOOGLE("google.com"),
+        FACEBOOK("facebook.com"),
+        PHONE("phone"),
+        GITHUB("github.com"),
+        CUSTOM("custom");
+
+        private final String value;
+
+        AuthProvider(String value) {
+            this.value = value;
+        }
+
+        public String getValue() {
+            return value;
+        }
     }
 
-    /**
-     * Papel do usuário no sistema
-     */
-    public enum UserRole {
-        ADMIN, USER, RESIDENT
-    }
-
-    /**
-     * Status do usuário no sistema
-     */
-    public enum UserStatus {
-        ACTIVE, INACTIVE, BANNED
-    }
 
     // Métodos de comportamento do domínio
 
@@ -68,7 +69,7 @@ public class User {
      * Inativa o usuário
      */
     public void deactivate() {
-        this.status = UserStatus.INACTIVE;
+        this.status = "INACTIVE";
     }
 
     /**
@@ -78,12 +79,6 @@ public class User {
         return this.currentRepublic != null && Boolean.TRUE.equals(this.isAdmin);
     }
 
-    /**
-     * Verifica se o usuário é administrador do sistema
-     */
-    public boolean isSystemAdmin() {
-        return this.role == UserRole.ADMIN;
-    }
 
     /**
      * Associa o usuário a uma república

@@ -5,10 +5,11 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.rephelper.infrastructure.entity.UserJpaEntity;
-import com.rephelper.infrastructure.entity.UserJpaEntity.UserRole;
 
 /**
  * Repositório JPA para Usuários
@@ -16,10 +17,10 @@ import com.rephelper.infrastructure.entity.UserJpaEntity.UserRole;
 @Repository
 public interface UserJpaRepository extends JpaRepository<UserJpaEntity, UUID> {
     Optional<UserJpaEntity> findByEmail(String email);
-    Optional<UserJpaEntity> findByFirebaseUid(String firebaseUid);
+    @Query("SELECT u FROM UserJpaEntity u WHERE u.firebaseUid = :firebaseUid")
+    Optional<UserJpaEntity> findByFirebaseUid(@Param("firebaseUid") String firebaseUid);
     boolean existsByEmail(String email);
     boolean existsByFirebaseUid(String firebaseUid);
-    List<UserJpaEntity> findByRole(UserRole role);
     List<UserJpaEntity> findByCurrentRepublicUuid(UUID republicId);
 }
 

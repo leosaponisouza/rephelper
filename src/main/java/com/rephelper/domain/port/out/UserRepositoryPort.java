@@ -47,11 +47,6 @@ public interface UserRepositoryPort {
     List<User> findAll();
 
     /**
-     * Busca usuários pelo papel
-     */
-    List<User> findByRole(User.UserRole role);
-
-    /**
      * Busca usuários pela república atual
      */
     List<User> findByCurrentRepublicId(UUID republicId);

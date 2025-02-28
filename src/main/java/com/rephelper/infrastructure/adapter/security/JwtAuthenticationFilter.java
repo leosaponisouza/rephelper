@@ -31,9 +31,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             String jwt = getJwtFromRequest(request);
 
-            if (StringUtils.hasText(jwt) && tokenProvider.validateToken(jwt)) {
-                Authentication authentication = tokenProvider.getAuthentication(jwt);
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+            if (StringUtils.hasText(jwt)) {
+                // Verificar se é um endpoint de login (que aceita token Firebase)
+                String path = request.getRequestURI();
+                if (path.endsWith("/auth/login")) {
+                    // Não validar aqui, deixe o controller fazer isso
+                } else {
+                    // Para outros endpoints, validar como um JWT normal
+                    if (tokenProvider.validateToken(jwt)) {
+                        Authentication authentication = tokenProvider.getAuthentication(jwt);
+                        SecurityContextHolder.getContext().setAuthentication(authentication);
+                    }
+                }
             }
         } catch (Exception e) {
             log.error("Could not set user authentication in security context", e);

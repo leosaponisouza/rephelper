@@ -25,8 +25,7 @@ public class CommonMapperConfig {
                 .profilePictureUrl(entity.getProfilePictureUrl())
                 .firebaseUid(entity.getFirebaseUid())
                 .provider(mapAuthProvider(entity.getProvider()))
-                .role(mapUserRole(entity.getRole()))
-                .status(mapUserStatus(entity.getStatus()))
+                .status(entity.getStatus())
                 .isAdmin(entity.getIsAdmin())
                 .entryDate(entity.getEntryDate())
                 .departureDate(entity.getDepartureDate())
@@ -46,8 +45,7 @@ public class CommonMapperConfig {
                 .profilePictureUrl(user.getProfilePictureUrl())
                 .firebaseUid(user.getFirebaseUid())
                 .provider(mapAuthProviderToEntity(user.getProvider()))
-                .role(mapUserRoleToEntity(user.getRole()))
-                .status(mapUserStatusToEntity(user.getStatus()))
+                .status(user.getStatus())
                 .isAdmin(user.getIsAdmin())
                 .entryDate(user.getEntryDate())
                 .departureDate(user.getDepartureDate())
@@ -106,56 +104,11 @@ public class CommonMapperConfig {
                 .build();
     }
 
-    // Add enum mapping methods here
-    private User.UserRole mapUserRole(UserJpaEntity.UserRole role) {
-        if (role == null) return null;
-
-        switch (role) {
-            case ADMIN: return User.UserRole.ADMIN;
-            case USER: return User.UserRole.USER;
-            case RESIDENT: return User.UserRole.RESIDENT;
-            default: throw new IllegalArgumentException("Unknown role: " + role);
-        }
-    }
-
-    private UserJpaEntity.UserRole mapUserRoleToEntity(User.UserRole role) {
-        if (role == null) return null;
-
-        switch (role) {
-            case ADMIN: return UserJpaEntity.UserRole.ADMIN;
-            case USER: return UserJpaEntity.UserRole.USER;
-            case RESIDENT: return UserJpaEntity.UserRole.RESIDENT;
-            default: throw new IllegalArgumentException("Unknown role: " + role);
-        }
-    }
-
-    private User.UserStatus mapUserStatus(UserJpaEntity.UserStatus status) {
-        if (status == null) return null;
-
-        switch (status) {
-            case ACTIVE: return User.UserStatus.ACTIVE;
-            case INACTIVE: return User.UserStatus.INACTIVE;
-            case BANNED: return User.UserStatus.BANNED;
-            default: throw new IllegalArgumentException("Unknown status: " + status);
-        }
-    }
-
-    private UserJpaEntity.UserStatus mapUserStatusToEntity(User.UserStatus status) {
-        if (status == null) return null;
-
-        switch (status) {
-            case ACTIVE: return UserJpaEntity.UserStatus.ACTIVE;
-            case INACTIVE: return UserJpaEntity.UserStatus.INACTIVE;
-            case BANNED: return UserJpaEntity.UserStatus.BANNED;
-            default: throw new IllegalArgumentException("Unknown status: " + status);
-        }
-    }
-
     private User.AuthProvider mapAuthProvider(UserJpaEntity.AuthProvider provider) {
         if (provider == null) return null;
 
         switch (provider) {
-            case EMAIL: return User.AuthProvider.EMAIL;
+            case email: return User.AuthProvider.EMAIL;
             case GOOGLE: return User.AuthProvider.GOOGLE;
             case FACEBOOK: return User.AuthProvider.FACEBOOK;
             case PHONE: return User.AuthProvider.PHONE;
@@ -169,7 +122,7 @@ public class CommonMapperConfig {
         if (provider == null) return null;
 
         switch (provider) {
-            case EMAIL: return UserJpaEntity.AuthProvider.EMAIL;
+            case EMAIL: return UserJpaEntity.AuthProvider.email;
             case GOOGLE: return UserJpaEntity.AuthProvider.GOOGLE;
             case FACEBOOK: return UserJpaEntity.AuthProvider.FACEBOOK;
             case PHONE: return UserJpaEntity.AuthProvider.PHONE;

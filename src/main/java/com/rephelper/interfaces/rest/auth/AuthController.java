@@ -25,7 +25,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/auth")
+@RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
 @Tag(name = "Authentication", description = "Endpoints for authentication")
 public class AuthController {
@@ -49,7 +49,7 @@ public class AuthController {
             user = userService.updateLastLogin(user.getId());
 
             // Generate JWT token
-            String token = jwtTokenProvider.generateToken(user.getId(), user.getRole().name());
+            String token = jwtTokenProvider.generateToken(user.getId());
 
             // Map user to response
             UserResponse userResponse = userDtoMapper.toUserResponse(user);
@@ -60,29 +60,8 @@ public class AuthController {
                     .build());
 
         } catch (Exception e) {
-            // User doesn't exist, register new user from Firebase
-            // This could be expanded to get more user details from Firebase
-            CreateUserRequest createUserRequest = CreateUserRequest.builder()
-                    .name("New User") // Use a default name or get from Firebase
-                    .email("user@example.com") // Get from Firebase
-                    .firebaseUid(firebaseUid)
-                    .provider(User.AuthProvider.EMAIL) // Default or from Firebase
-                    .role(User.UserRole.USER) // Default role
-                    .build();
 
-            // Create user
-            User newUser = userService.createUser(userDtoMapper.toUser(createUserRequest));
-
-            // Generate JWT token
-            String token = jwtTokenProvider.generateToken(newUser.getId(), newUser.getRole().name());
-
-            // Map user to response
-            UserResponse userResponse = userDtoMapper.toUserResponse(newUser);
-
-            return ResponseEntity.ok(AuthResponse.builder()
-                    .token(token)
-                    .user(userResponse)
-                    .build());
+            return ResponseEntity.badRequest().build();
         }
     }
 
@@ -101,7 +80,7 @@ public class AuthController {
         User user = userService.getUserById(userId);
 
         // Generate new token
-        String newToken = jwtTokenProvider.generateToken(user.getId(), user.getRole().name());
+        String newToken = jwtTokenProvider.generateToken(user.getId());
 
         // Map user to response
         UserResponse userResponse = userDtoMapper.toUserResponse(user);

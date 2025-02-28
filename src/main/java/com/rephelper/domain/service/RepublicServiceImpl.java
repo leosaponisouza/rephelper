@@ -67,7 +67,6 @@ public class RepublicServiceImpl implements RepublicServicePort {
                 .entryDate(owner.getEntryDate())
                 .departureDate(owner.getDepartureDate())
                 .status(owner.getStatus())
-                .role(owner.getRole())
                 .createdAt(owner.getCreatedAt())
                 .lastLogin(owner.getLastLogin())
                 .build();

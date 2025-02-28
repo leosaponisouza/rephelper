@@ -27,9 +27,6 @@ public class FirebaseConfig {
     @Value("${rephelper.firebase.service-account-key}")
     private String firebaseCredentials;
 
-    @Value("${rephelper.firebase.config.database-url}")
-    private String databaseUrl;
-
     @Value("${rephelper.firebase.config.storage-bucket:}")
     private String storageBucket;
 
@@ -49,10 +46,6 @@ public class FirebaseConfig {
 
                     FirebaseOptions.Builder optionsBuilder = FirebaseOptions.builder()
                             .setCredentials(GoogleCredentials.fromStream(credentialsStream));
-
-                    if (StringUtils.hasText(databaseUrl)) {
-                        optionsBuilder.setDatabaseUrl(databaseUrl);
-                    }
 
                     if (StringUtils.hasText(storageBucket)) {
                         optionsBuilder.setStorageBucket(storageBucket);

@@ -25,10 +25,9 @@ public class UserResponse {
     private Boolean isAdmin;
     private LocalDateTime createdAt;
     private LocalDateTime lastLogin;
-    private User.UserStatus status;
+    private String status;
     private String firebaseUid;
     private User.AuthProvider provider;
-    private User.UserRole role;
     private LocalDateTime entryDate;
     private LocalDateTime departureDate;
 }

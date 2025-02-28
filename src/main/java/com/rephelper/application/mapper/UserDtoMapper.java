@@ -23,8 +23,7 @@ public class UserDtoMapper {
                 .profilePictureUrl(request.getProfilePictureUrl())
                 .firebaseUid(request.getFirebaseUid())
                 .provider(request.getProvider())
-                .role(request.getRole() != null ? request.getRole() : User.UserRole.USER)
-                .status(User.UserStatus.ACTIVE)
+                .status("active")
                 .isAdmin(false)
                 .build();
     }
@@ -46,7 +45,6 @@ public class UserDtoMapper {
                 .status(user.getStatus())
                 .firebaseUid(user.getFirebaseUid())
                 .provider(user.getProvider())
-                .role(user.getRole())
                 .entryDate(user.getEntryDate())
                 .departureDate(user.getDepartureDate())
                 .build();

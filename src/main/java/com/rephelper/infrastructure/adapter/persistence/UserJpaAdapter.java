@@ -44,7 +44,23 @@ public class UserJpaAdapter implements UserRepositoryPort {
 
     @Override
     public Optional<User> findByFirebaseUid(String firebaseUid) {
-        return userJpaRepository.findByFirebaseUid(firebaseUid)
+        // Adicione log para verificar o firebaseUid sendo buscado
+        System.out.println("Searching for user with Firebase UID: " + firebaseUid);
+
+        // Verifique se o repositório está realmente encontrando o usuário
+        Optional<UserJpaEntity> userEntityOptional = userJpaRepository.findByFirebaseUid(firebaseUid);
+
+        // Log para verificar o resultado da busca
+        if (!userEntityOptional.isPresent()) {
+            System.out.println("No user found with Firebase UID: " + firebaseUid);
+            // Você pode querer adicionar mais logs ou verificações
+            // Por exemplo, verificar se o usuário existe no banco de dados
+            long userCount = userJpaRepository.count();
+            System.out.println("Total users in database: " + userCount);
+        }
+
+        // Mapeie apenas se o optional contém um valor
+        return userEntityOptional
                 .map(userMapper::toDomainEntity);
     }
 
@@ -65,13 +81,6 @@ public class UserJpaAdapter implements UserRepositoryPort {
                 .collect(Collectors.toList());
     }
 
-    @Override
-    public List<User> findByRole(User.UserRole role) {
-        UserJpaEntity.UserRole jpaRole = userMapper.mapToJpaUserRole(role);
-        return userJpaRepository.findByRole(jpaRole).stream()
-                .map(userMapper::toDomainEntity)
-                .collect(Collectors.toList());
-    }
 
     @Override
     public List<User> findByCurrentRepublicId(UUID republicId) {

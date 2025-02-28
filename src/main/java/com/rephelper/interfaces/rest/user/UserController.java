@@ -32,7 +32,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/users")
+@RequestMapping("api/v1/users")
 @RequiredArgsConstructor
 @Tag(name = "Users", description = "User management endpoints")
 public class UserController {
@@ -77,7 +77,7 @@ public class UserController {
             @AuthenticationPrincipal CustomUserDetails currentUser) {
 
         // Check if user is updating their own profile or is an admin
-        if (!id.equals(currentUser.getUserId()) && !currentUser.getRole().equals("ADMIN")) {
+        if (!id.equals(currentUser.getUserId()) && !currentUser.getRole().equals("admin")) {
             throw new ForbiddenException("You do not have permission to update this user");
         }
 
@@ -99,7 +99,7 @@ public class UserController {
             @AuthenticationPrincipal CustomUserDetails currentUser) {
 
         // Check if user is deleting their own account or is an admin
-        if (!id.equals(currentUser.getUserId()) && !currentUser.getRole().equals("ADMIN")) {
+        if (!id.equals(currentUser.getUserId()) && !currentUser.getRole().equals("admin")) {
             throw new ForbiddenException("You do not have permission to delete this user");
         }
 

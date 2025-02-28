@@ -67,9 +67,8 @@ public class UserJpaEntity {
     @Column(name = "last_login")
     private LocalDateTime lastLogin;
 
-    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private UserStatus status;
+    private String status;
 
     @Column(name = "firebase_uid", nullable = false, unique = true)
     private String firebaseUid;
@@ -78,10 +77,6 @@ public class UserJpaEntity {
     @Column(nullable = false)
     private AuthProvider provider;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private UserRole role;
-
     @Column(name = "entry_date")
     private LocalDateTime entryDate;
 
@@ -89,23 +84,25 @@ public class UserJpaEntity {
     private LocalDateTime departureDate;
 
     /**
-     * Status possíveis para o usuário
-     */
-    public enum UserStatus {
-        ACTIVE, INACTIVE, BANNED
-    }
-
-    /**
      * Provedores de autenticação possíveis
      */
     public enum AuthProvider {
-        EMAIL, GOOGLE, FACEBOOK, PHONE, GITHUB, CUSTOM
+        email("email"),
+        GOOGLE("google.com"),
+        FACEBOOK("facebook.com"),
+        PHONE("phone"),
+        GITHUB("github.com"),
+        CUSTOM("custom");
+
+        private final String value;
+
+        AuthProvider(String value) {
+            this.value = value;
+        }
+
+        public String getValue() {
+            return value;
+        }
     }
 
-    /**
-     * Papéis possíveis para o usuário
-     */
-    public enum UserRole {
-        ADMIN, USER, RESIDENT
-    }
 }

@@ -37,6 +37,4 @@ public class CreateUserRequest {
 
     @NotNull(message = "Authentication provider is required")
     private User.AuthProvider provider;
-
-    private User.UserRole role;
 }

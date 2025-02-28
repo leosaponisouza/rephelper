@@ -50,8 +50,7 @@ public class UserServiceImpl implements UserServicePort {
                     .isAdmin(user.getIsAdmin())
                     .entryDate(user.getEntryDate())
                     .departureDate(user.getDepartureDate())
-                    .status(User.UserStatus.ACTIVE)
-                    .role(user.getRole() != null ? user.getRole() : User.UserRole.USER)
+                    .status("active")
                     .build();
         }
 
@@ -145,7 +144,6 @@ public class UserServiceImpl implements UserServicePort {
                     .entryDate(user.getEntryDate())
                     .departureDate(null) // Limpar data de saída
                     .status(user.getStatus())
-                    .role(user.getRole())
                     .createdAt(user.getCreatedAt())
                     .lastLogin(user.getLastLogin())
                     .build();
@@ -164,7 +162,6 @@ public class UserServiceImpl implements UserServicePort {
                     .entryDate(user.getEntryDate())
                     .departureDate(LocalDateTime.now()) // Definir data de saída atual
                     .status(user.getStatus())
-                    .role(user.getRole())
                     .createdAt(user.getCreatedAt())
                     .lastLogin(user.getLastLogin())
                     .build();

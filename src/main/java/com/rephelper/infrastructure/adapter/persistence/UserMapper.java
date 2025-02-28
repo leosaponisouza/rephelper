@@ -30,7 +30,6 @@ public class UserMapper {
                     .profilePictureUrl(user.getProfilePictureUrl())
                     .firebaseUid(user.getFirebaseUid())
                     .provider(user.getProvider())
-                    .role(user.getRole())
                     .status(user.getStatus())
                     .currentRepublic(currentRepublic)
                     .isAdmin(user.getIsAdmin())
@@ -65,73 +64,14 @@ public class UserMapper {
         return commonMapperConfig.mapUserEntityWithoutRepublic(domainEntity);
     }
 
-    // Enum mapping methods
-    public UserJpaEntity.UserRole mapToJpaUserRole(User.UserRole domainRole) {
-        if (domainRole == null) return null;
 
-        switch (domainRole) {
-            case ADMIN:
-                return UserJpaEntity.UserRole.ADMIN;
-            case USER:
-                return UserJpaEntity.UserRole.USER;
-            case RESIDENT:
-                return UserJpaEntity.UserRole.RESIDENT;
-            default:
-                throw new IllegalArgumentException("Unknown user role: " + domainRole);
-        }
-    }
-
-    public User.UserRole mapToDomainUserRole(UserJpaEntity.UserRole jpaRole) {
-        if (jpaRole == null) return null;
-
-        switch (jpaRole) {
-            case ADMIN:
-                return User.UserRole.ADMIN;
-            case USER:
-                return User.UserRole.USER;
-            case RESIDENT:
-                return User.UserRole.RESIDENT;
-            default:
-                throw new IllegalArgumentException("Unknown user role: " + jpaRole);
-        }
-    }
-
-    public UserJpaEntity.UserStatus mapToJpaUserStatus(User.UserStatus domainStatus) {
-        if (domainStatus == null) return null;
-
-        switch (domainStatus) {
-            case ACTIVE:
-                return UserJpaEntity.UserStatus.ACTIVE;
-            case INACTIVE:
-                return UserJpaEntity.UserStatus.INACTIVE;
-            case BANNED:
-                return UserJpaEntity.UserStatus.BANNED;
-            default:
-                throw new IllegalArgumentException("Unknown user status: " + domainStatus);
-        }
-    }
-
-    public User.UserStatus mapToDomainUserStatus(UserJpaEntity.UserStatus jpaStatus) {
-        if (jpaStatus == null) return null;
-
-        switch (jpaStatus) {
-            case ACTIVE:
-                return User.UserStatus.ACTIVE;
-            case INACTIVE:
-                return User.UserStatus.INACTIVE;
-            case BANNED:
-                return User.UserStatus.BANNED;
-            default:
-                throw new IllegalArgumentException("Unknown user status: " + jpaStatus);
-        }
-    }
 
     public UserJpaEntity.AuthProvider mapToJpaAuthProvider(User.AuthProvider domainProvider) {
         if (domainProvider == null) return null;
 
         switch (domainProvider) {
             case EMAIL:
-                return UserJpaEntity.AuthProvider.EMAIL;
+                return UserJpaEntity.AuthProvider.email;
             case GOOGLE:
                 return UserJpaEntity.AuthProvider.GOOGLE;
             case FACEBOOK:
@@ -151,7 +91,7 @@ public class UserMapper {
         if (jpaProvider == null) return null;
 
         switch (jpaProvider) {
-            case EMAIL:
+            case email:
                 return User.AuthProvider.EMAIL;
             case GOOGLE:
                 return User.AuthProvider.GOOGLE;

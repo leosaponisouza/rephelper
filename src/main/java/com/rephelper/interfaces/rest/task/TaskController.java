@@ -77,7 +77,7 @@ public class TaskController {
         if (targetRepublicId == null) {
             targetRepublicId = user.getCurrentRepublic().getId();
         } else if (!targetRepublicId.equals(user.getCurrentRepublic().getId()) &&
-                !currentUser.getRole().equals("ADMIN")) {
+                !currentUser.getRole().equals("admin")) {
             throw new ValidationException("You can only view tasks for your own republic");
         }
 
@@ -117,7 +117,7 @@ public class TaskController {
         if (targetRepublicId == null) {
             targetRepublicId = user.getCurrentRepublic().getId();
         } else if (!targetRepublicId.equals(user.getCurrentRepublic().getId()) &&
-                !currentUser.getRole().equals("ADMIN")) {
+                !currentUser.getRole().equals("admin")) {
             throw new ValidationException("You can only view tasks for your own republic");
         }
 
@@ -146,7 +146,7 @@ public class TaskController {
         if (targetRepublicId == null) {
             targetRepublicId = user.getCurrentRepublic().getId();
         } else if (!targetRepublicId.equals(user.getCurrentRepublic().getId()) &&
-                !currentUser.getRole().equals("ADMIN")) {
+                !currentUser.getRole().equals("admin")) {
             throw new ValidationException("You can only view tasks for your own republic");
         }
 

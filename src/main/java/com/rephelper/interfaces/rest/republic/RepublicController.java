@@ -39,7 +39,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/republics")
+@RequestMapping("api/v1/republics")
 @RequiredArgsConstructor
 @Tag(name = "Republics", description = "Republic management endpoints")
 public class RepublicController {
@@ -81,7 +81,7 @@ public class RepublicController {
         User updatedUser = userService.getUserById(currentUser.getUserId());
 
         // Generate new token with updated user info
-        String token = jwtTokenProvider.generateToken(updatedUser.getId(), updatedUser.getRole().name());
+        String token = jwtTokenProvider.generateToken(updatedUser.getId());
 
         // Create response with token and user
         AuthResponse response = AuthResponse.builder()
@@ -125,7 +125,7 @@ public class RepublicController {
 
         // Check if user is owner or admin
         User user = userService.getUserById(currentUser.getUserId());
-        boolean isSystemAdmin = "ADMIN".equals(currentUser.getRole());
+        boolean isSystemAdmin = "admin".equals(currentUser.getRole());
         boolean isOwner = republic.getOwner().getId().equals(currentUser.getUserId());
 
         if (!isSystemAdmin && !isOwner) {
@@ -151,7 +151,7 @@ public class RepublicController {
         Republic republic = republicService.getRepublicById(id);
 
         // Check if user is owner or admin
-        boolean isSystemAdmin = "ADMIN".equals(currentUser.getRole());
+        boolean isSystemAdmin = "admin".equals(currentUser.getRole());
         boolean isOwner = republic.getOwner().getId().equals(currentUser.getUserId());
 
         if (!isSystemAdmin && !isOwner) {
@@ -177,7 +177,7 @@ public class RepublicController {
         User updatedUser = republicService.joinRepublicByCode(currentUser.getUserId(), request.getCode());
 
         // Generate new token with updated user info
-        String token = jwtTokenProvider.generateToken(updatedUser.getId(), updatedUser.getRole().name());
+        String token = jwtTokenProvider.generateToken(updatedUser.getId());
 
         // Create response with token and user
         AuthResponse response = AuthResponse.builder()
@@ -199,7 +199,7 @@ public class RepublicController {
         Republic republic = republicService.getRepublicById(republicId);
 
         // Check if user is owner or admin
-        boolean isSystemAdmin = "ADMIN".equals(currentUser.getRole());
+        boolean isSystemAdmin = "admin".equals(currentUser.getRole());
         boolean isOwner = republic.getOwner().getId().equals(currentUser.getUserId());
 
         if (!isSystemAdmin && !isOwner) {
@@ -223,7 +223,7 @@ public class RepublicController {
         Republic republic = republicService.getRepublicById(republicId);
 
         // Check if user is owner or admin
-        boolean isSystemAdmin = "ADMIN".equals(currentUser.getRole());
+        boolean isSystemAdmin = "admin".equals(currentUser.getRole());
         boolean isOwner = republic.getOwner().getId().equals(currentUser.getUserId());
 
         if (!isSystemAdmin && !isOwner) {

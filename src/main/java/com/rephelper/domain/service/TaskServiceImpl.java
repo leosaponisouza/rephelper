@@ -107,12 +107,11 @@ public class TaskServiceImpl implements TaskServicePort {
         User user = userRepository.findById(modifierUserId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + modifierUserId));
 
-        // Verificar se o usuário pertence à república ou é admin
-        boolean isAdmin = user.getRole() == User.UserRole.ADMIN;
+
         boolean isMember = user.getCurrentRepublic() != null &&
                 user.getCurrentRepublic().getId().equals(task.getRepublic().getId());
 
-        if (!isAdmin && !isMember) {
+        if ( !isMember) {
             throw new ForbiddenException("You do not have permission to update this task");
         }
 
@@ -129,13 +128,10 @@ public class TaskServiceImpl implements TaskServicePort {
         // Validar usuário
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
-
-        // Verificar se o usuário pertence à república ou é admin
-        boolean isAdmin = user.getRole() == User.UserRole.ADMIN;
         boolean isMember = user.getCurrentRepublic() != null &&
                 user.getCurrentRepublic().getId().equals(task.getRepublic().getId());
 
-        if (!isAdmin && !isMember) {
+        if ( !isMember) {
             throw new ForbiddenException("You do not have permission to complete this task");
         }
 
@@ -153,12 +149,10 @@ public class TaskServiceImpl implements TaskServicePort {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
 
-        // Verificar se o usuário pertence à república ou é admin
-        boolean isAdmin = user.getRole() == User.UserRole.ADMIN;
         boolean isMember = user.getCurrentRepublic() != null &&
                 user.getCurrentRepublic().getId().equals(task.getRepublic().getId());
 
-        if (!isAdmin && !isMember) {
+        if (!isMember) {
             throw new ForbiddenException("You do not have permission to cancel this task");
         }
 
@@ -176,12 +170,11 @@ public class TaskServiceImpl implements TaskServicePort {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
 
-        // Verificar se o usuário pertence à república ou é admin
-        boolean isAdmin = user.getRole() == User.UserRole.ADMIN;
+
         boolean isMember = user.getCurrentRepublic() != null &&
                 user.getCurrentRepublic().getId().equals(task.getRepublic().getId());
 
-        if (!isAdmin && !isMember) {
+        if ( !isMember) {
             throw new ForbiddenException("You do not have permission to delete this task");
         }
 
@@ -202,11 +195,10 @@ public class TaskServiceImpl implements TaskServicePort {
                 .orElseThrow(() -> new ResourceNotFoundException("Assigner user not found with id: " + assignerUserId));
 
         // Verificar se o atribuidor pertence à república ou é admin
-        boolean isAssignerAdmin = assigner.getRole() == User.UserRole.ADMIN;
         boolean isAssignerMember = assigner.getCurrentRepublic() != null &&
                 assigner.getCurrentRepublic().getId().equals(task.getRepublic().getId());
 
-        if (!isAssignerAdmin && !isAssignerMember) {
+        if ( !isAssignerMember) {
             throw new ForbiddenException("You do not have permission to assign tasks in this republic");
         }
 
@@ -237,11 +229,10 @@ public class TaskServiceImpl implements TaskServicePort {
                 .orElseThrow(() -> new ResourceNotFoundException("Unassigner user not found with id: " + unassignerUserId));
 
         // Verificar se o removedor pertence à república ou é admin
-        boolean isUnassignerAdmin = unassigner.getRole() == User.UserRole.ADMIN;
         boolean isUnassignerMember = unassigner.getCurrentRepublic() != null &&
                 unassigner.getCurrentRepublic().getId().equals(task.getRepublic().getId());
 
-        if (!isUnassignerAdmin && !isUnassignerMember) {
+        if ( !isUnassignerMember) {
             throw new ForbiddenException("You do not have permission to unassign tasks in this republic");
         }
 

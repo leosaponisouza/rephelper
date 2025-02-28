@@ -1,9 +1,6 @@
 package com.rephelper.infrastructure.adapter.security;
 
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Function;
 
 import javax.crypto.SecretKey;
@@ -35,9 +32,22 @@ public class JwtTokenProvider {
     private final String audience;
 
 
-    // Inject JwtProperties
     public JwtTokenProvider(com.rephelper.config.JwtProperties jwtProperties) {
-        this.key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtProperties.getSecret()));
+        // If the existing secret is not long enough, generate a new secure key
+        if (jwtProperties.getSecret() == null || jwtProperties.getSecret().length() < 64) {
+            // Generate a secure key
+            this.key = Keys.secretKeyFor(SignatureAlgorithm.HS512);
+
+            // Convert the key to a base64 string that can be stored in properties
+            String encodedKey = Base64.getEncoder().encodeToString(this.key.getEncoded());
+            log.warn("Generated new secure JWT secret key. Please update your configuration with: rephelper.jwt.secret=" + encodedKey);
+        } else {
+            // Use the provided secret
+            this.key = Keys.hmacShaKeyFor(
+                    Base64.getDecoder().decode(jwtProperties.getSecret())
+            );
+        }
+
         this.jwtExpirationMs = jwtProperties.getExpiration();
         this.issuer = jwtProperties.getIssuer();
         this.audience = jwtProperties.getAudience();
@@ -47,9 +57,8 @@ public class JwtTokenProvider {
     /**
      * Gera um token JWT para o usuário
      */
-    public String generateToken(UUID userId, String role) {
+    public String generateToken(UUID userId) {
         Map<String, Object> claims = new HashMap<>();
-        claims.put("role", role);
 
         return Jwts.builder()
                 .setClaims(claims)
@@ -58,7 +67,7 @@ public class JwtTokenProvider {
                 .setExpiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
                 .setIssuer(issuer)
                 .setAudience(audience)
-                .signWith(key, SignatureAlgorithm.HS512) // Use the key and the algorithm
+                .signWith(key, SignatureAlgorithm.HS512) // Usar HS512 em vez de RS256
                 .compact();
     }
 

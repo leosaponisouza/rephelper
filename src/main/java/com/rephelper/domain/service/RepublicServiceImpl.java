@@ -64,7 +64,6 @@ public class RepublicServiceImpl implements RepublicServicePort {
                 .provider(owner.getProvider())
                 .currentRepublic(savedRepublic)
                 .isAdmin(true)
-                .isActiveResident(true)
                 .entryDate(owner.getEntryDate())
                 .departureDate(owner.getDepartureDate())
                 .status(owner.getStatus())

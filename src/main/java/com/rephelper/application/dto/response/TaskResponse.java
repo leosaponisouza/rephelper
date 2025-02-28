@@ -19,7 +19,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class TaskResponse {
-    private UUID id;
+    private Long id;
     private String title;
     private String description;
     private UUID republicId;

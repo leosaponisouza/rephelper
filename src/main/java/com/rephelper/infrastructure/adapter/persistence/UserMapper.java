@@ -1,41 +1,71 @@
 package com.rephelper.infrastructure.adapter.persistence;
 
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.Named;
-import org.springframework.beans.factory.annotation.Autowired;
-
+import com.rephelper.domain.model.Republic;
 import com.rephelper.domain.model.User;
+import com.rephelper.infrastructure.config.CommonMapperConfig;
+import com.rephelper.infrastructure.entity.RepublicJpaEntity;
 import com.rephelper.infrastructure.entity.UserJpaEntity;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
-/**
- * Mapper para converter entre User do domínio e UserJpaEntity
- */
-@Mapper(componentModel = "spring", uses = {RepublicMapper.class})
-public abstract class UserMapper {
+@Component
+public class UserMapper {
 
     @Autowired
-    protected RepublicMapper republicMapper;
+    private CommonMapperConfig commonMapperConfig;
 
-    @Mapping(target = "id", source = "uuid")
-    @Mapping(target = "currentRepublic", source = "currentRepublic", qualifiedByName = "toEntityWithoutUsers")
-    public abstract User toDomainEntity(UserJpaEntity jpaEntity);
+    // Make sure these methods are public and correctly named
+    public User toDomainEntity(UserJpaEntity jpaEntity) {
+        if (jpaEntity == null) return null;
 
-    @Mapping(target = "uuid", source = "id")
-    @Mapping(target = "currentRepublic", source = "currentRepublic", qualifiedByName = "toJpaEntityWithoutUsers")
-    public abstract UserJpaEntity toJpaEntity(User domainEntity);
+        User user = commonMapperConfig.mapUserWithoutRepublic(jpaEntity);
 
-    @Named("userWithoutRepublic")
-    @Mapping(target = "id", source = "uuid")
-    @Mapping(target = "currentRepublic", ignore = true)
-    public abstract User toDomainEntityWithoutRepublic(UserJpaEntity jpaEntity);
+        if (jpaEntity.getCurrentRepublic() != null) {
+            Republic currentRepublic = commonMapperConfig.mapRepublicWithoutUsers(jpaEntity.getCurrentRepublic());
+            user = User.builder()
+                    .id(user.getId())
+                    .name(user.getName())
+                    .email(user.getEmail())
+                    .phoneNumber(user.getPhoneNumber())
+                    .profilePictureUrl(user.getProfilePictureUrl())
+                    .firebaseUid(user.getFirebaseUid())
+                    .provider(user.getProvider())
+                    .role(user.getRole())
+                    .status(user.getStatus())
+                    .currentRepublic(currentRepublic)
+                    .isAdmin(user.getIsAdmin())
+                    .entryDate(user.getEntryDate())
+                    .departureDate(user.getDepartureDate())
+                    .createdAt(user.getCreatedAt())
+                    .lastLogin(user.getLastLogin())
+                    .build();
+        }
 
-    @Named("userJpaWithoutRepublic")
-    @Mapping(target = "uuid", source = "id")
-    @Mapping(target = "currentRepublic", ignore = true)
-    public abstract UserJpaEntity toJpaEntityWithoutRepublic(User domainEntity);
+        return user;
+    }
 
-    // Método para mapear enums
+    public UserJpaEntity toJpaEntity(User domainEntity) {
+        if (domainEntity == null) return null;
+
+        UserJpaEntity entity = commonMapperConfig.mapUserEntityWithoutRepublic(domainEntity);
+
+        if (domainEntity.getCurrentRepublic() != null) {
+            RepublicJpaEntity currentRepublic = commonMapperConfig.mapRepublicEntityWithoutUsers(domainEntity.getCurrentRepublic());
+            entity.setCurrentRepublic(currentRepublic);
+        }
+
+        return entity;
+    }
+
+    public User toDomainEntityWithoutRepublic(UserJpaEntity jpaEntity) {
+        return commonMapperConfig.mapUserWithoutRepublic(jpaEntity);
+    }
+
+    public UserJpaEntity toJpaEntityWithoutRepublic(User domainEntity) {
+        return commonMapperConfig.mapUserEntityWithoutRepublic(domainEntity);
+    }
+
+    // Enum mapping methods
     public UserJpaEntity.UserRole mapToJpaUserRole(User.UserRole domainRole) {
         if (domainRole == null) return null;
 
@@ -138,4 +168,3 @@ public abstract class UserMapper {
         }
     }
 }
-

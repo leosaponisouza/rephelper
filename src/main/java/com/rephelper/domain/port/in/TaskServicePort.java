@@ -24,7 +24,7 @@ public interface TaskServicePort {
     /**
      * Obtém uma tarefa pelo ID
      */
-    Task getTaskById(UUID id);
+    Task getTaskById(Long id);
 
     /**
      * Obtém tarefas por categoria em uma república
@@ -39,32 +39,33 @@ public interface TaskServicePort {
     /**
      * Atualiza uma tarefa existente
      */
-    Task updateTask(UUID id, String title, String description, LocalDateTime dueDate, String category, UUID modifierUserId);
+    Task updateTask(Long id, String title, String description, LocalDateTime dueDate, String category, UUID modifierUserId);
 
     /**
      * Marca uma tarefa como concluída
      */
-    Task completeTask(UUID id, UUID userId);
+    Task completeTask(Long id, UUID userId);
 
     /**
      * Cancela uma tarefa
      */
-    Task cancelTask(UUID id, UUID userId);
+    Task cancelTask(Long id, UUID userId);
 
     /**
      * Remove uma tarefa
      */
-    void deleteTask(UUID id, UUID userId);
+    void deleteTask(Long id, UUID userId);
 
     /**
      * Atribui uma tarefa a um usuário
      */
-    Task assignTaskToUser(UUID taskId, UUID userId, UUID assignerUserId);
+    Task assignTaskToUser(Long taskId, UUID userId, UUID assignerUserId);
 
     /**
      * Remove a atribuição de uma tarefa a um usuário
      */
-    Task unassignTaskFromUser(UUID taskId, UUID userId, UUID unassignerUserId);
+
+    Task unassignTaskFromUser(Long taskId, UUID userId, UUID unassignerUserId);
 
     /**
      * Obtém tarefas atribuídas a um usuário

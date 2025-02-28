@@ -48,7 +48,6 @@ public class UserServiceImpl implements UserServicePort {
                     .provider(user.getProvider())
                     .currentRepublic(user.getCurrentRepublic())
                     .isAdmin(user.getIsAdmin())
-                    .isActiveResident(user.getIsActiveResident())
                     .entryDate(user.getEntryDate())
                     .departureDate(user.getDepartureDate())
                     .status(User.UserStatus.ACTIVE)
@@ -143,7 +142,6 @@ public class UserServiceImpl implements UserServicePort {
                     .provider(user.getProvider())
                     .currentRepublic(user.getCurrentRepublic())
                     .isAdmin(user.getIsAdmin())
-                    .isActiveResident(true)
                     .entryDate(user.getEntryDate())
                     .departureDate(null) // Limpar data de saída
                     .status(user.getStatus())
@@ -163,7 +161,6 @@ public class UserServiceImpl implements UserServicePort {
                     .provider(user.getProvider())
                     .currentRepublic(user.getCurrentRepublic())
                     .isAdmin(user.getIsAdmin())
-                    .isActiveResident(false)
                     .entryDate(user.getEntryDate())
                     .departureDate(LocalDateTime.now()) // Definir data de saída atual
                     .status(user.getStatus())
@@ -182,11 +179,6 @@ public class UserServiceImpl implements UserServicePort {
         return userRepository.findByCurrentRepublicId(republicId);
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<User> getActiveResidentsByRepublicId(UUID republicId) {
-        return userRepository.findByCurrentRepublicIdAndIsActiveResident(republicId, true);
-    }
 
     @Override
     public void deleteUser(UUID id) {

@@ -31,5 +31,4 @@ public class UserResponse {
     private User.UserRole role;
     private LocalDateTime entryDate;
     private LocalDateTime departureDate;
-    private Boolean isActiveResident;
 }

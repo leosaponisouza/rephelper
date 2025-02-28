@@ -24,11 +24,17 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class FirebaseConfig {
 
-    @Value("${rephelper.firebase.credentials}")
+    @Value("${rephelper.firebase.service-account-key}")
     private String firebaseCredentials;
 
-    @Value("${rephelper.firebase.database-url:}")
+    @Value("${rephelper.firebase.config.database-url}")
     private String databaseUrl;
+
+    @Value("${rephelper.firebase.config.storage-bucket:}")
+    private String storageBucket;
+
+    @Value("${rephelper.firebase.config.project-id:}")
+    private String projectId;
 
     /**
      * Inicializa o Firebase com as credenciais fornecidas
@@ -48,10 +54,19 @@ public class FirebaseConfig {
                         optionsBuilder.setDatabaseUrl(databaseUrl);
                     }
 
-                    FirebaseOptions options = optionsBuilder.build();
+                    if (StringUtils.hasText(storageBucket)) {
+                        optionsBuilder.setStorageBucket(storageBucket);
+                    }
 
+                    if (StringUtils.hasText(projectId)) {
+                        optionsBuilder.setProjectId(projectId);
+                    }
+
+                    FirebaseOptions options = optionsBuilder.build();
                     FirebaseApp.initializeApp(options);
-                    log.info("Firebase has been initialized");
+                    log.info("Firebase has been initialized successfully using provided credentials");
+                } else {
+                    log.info("Firebase app already initialized");
                 }
             } else {
                 log.warn("Firebase credentials not provided. Firebase integration disabled.");

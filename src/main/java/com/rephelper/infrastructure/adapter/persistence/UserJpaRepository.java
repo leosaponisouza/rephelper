@@ -20,7 +20,6 @@ public interface UserJpaRepository extends JpaRepository<UserJpaEntity, UUID> {
     boolean existsByEmail(String email);
     boolean existsByFirebaseUid(String firebaseUid);
     List<UserJpaEntity> findByRole(UserRole role);
-    List<UserJpaEntity> findByCurrentRepublicId(UUID republicId);
-    List<UserJpaEntity> findByCurrentRepublicIdAndIsActiveResident(UUID republicId, Boolean isActiveResident);
+    List<UserJpaEntity> findByCurrentRepublicUuid(UUID republicId);
 }
 

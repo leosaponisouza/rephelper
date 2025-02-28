@@ -31,7 +31,7 @@ public class TaskJpaAdapter implements TaskRepositoryPort {
     }
 
     @Override
-    public Optional<Task> findById(UUID id) {
+    public Optional<Task> findById(Long id) {
         return taskJpaRepository.findById(id)
                 .map(taskMapper::toDomainEntity);
     }
@@ -45,14 +45,14 @@ public class TaskJpaAdapter implements TaskRepositoryPort {
 
     @Override
     public List<Task> findByRepublicId(UUID republicId) {
-        return taskJpaRepository.findByRepublicId(republicId).stream()
+        return taskJpaRepository.findByRepublicUuid(republicId).stream()
                 .map(taskMapper::toDomainEntity)
                 .collect(Collectors.toList());
     }
 
     @Override
     public List<Task> findByRepublicIdAndCategory(UUID republicId, String category) {
-        return taskJpaRepository.findByRepublicIdAndCategory(republicId, category).stream()
+        return taskJpaRepository.findByRepublicUuidAndCategory(republicId, category).stream()
                 .map(taskMapper::toDomainEntity)
                 .collect(Collectors.toList());
     }
@@ -60,7 +60,7 @@ public class TaskJpaAdapter implements TaskRepositoryPort {
     @Override
     public List<Task> findByRepublicIdAndStatus(UUID republicId, Task.TaskStatus status) {
         Task.TaskStatus jpaStatus = taskMapper.mapToJpaTaskStatus(status);
-        return taskJpaRepository.findByRepublicIdAndStatus(republicId, jpaStatus).stream()
+        return taskJpaRepository.findByRepublicUuidAndStatus(republicId, jpaStatus).stream()
                 .map(taskMapper::toDomainEntity)
                 .collect(Collectors.toList());
     }

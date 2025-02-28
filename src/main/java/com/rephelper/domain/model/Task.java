@@ -18,7 +18,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Task {
-    private UUID id;
+    private Long id;
     private String title;
     private String description;
     private Republic republic;

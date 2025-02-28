@@ -19,7 +19,7 @@ public interface TaskRepositoryPort {
     /**
      * Busca uma tarefa pelo ID
      */
-    Optional<Task> findById(UUID id);
+    Optional<Task> findById(Long id);
 
     /**
      * Busca todas as tarefas

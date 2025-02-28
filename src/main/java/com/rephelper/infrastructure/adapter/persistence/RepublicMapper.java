@@ -2,54 +2,113 @@ package com.rephelper.infrastructure.adapter.persistence;
 
 import com.rephelper.domain.model.Address;
 import com.rephelper.domain.model.Republic;
+import com.rephelper.domain.model.User;
+import com.rephelper.infrastructure.config.CommonMapperConfig;
 import com.rephelper.infrastructure.entity.RepublicJpaEntity;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.Named;
+import com.rephelper.infrastructure.entity.UserJpaEntity;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
-/**
- * Mapper para converter entre Republic do domínio e RepublicJpaEntity
- */
-@Mapper(componentModel = "spring")
-public abstract class RepublicMapper {
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+@Component
+public class RepublicMapper {
 
     @Autowired
-    protected UserMapper userMapper;
+    private CommonMapperConfig commonMapperConfig;
 
-    @Mapping(target = "address", expression = "java(toAddress(jpaEntity))")
-    @Mapping(target = "owner", source = "owner", qualifiedByName = "userWithoutRepublic")
-    @Mapping(target = "members", expression = "java(jpaEntity.getMembers().stream().map(userMapper::toDomainEntityWithoutRepublic).collect(java.util.stream.Collectors.toList()))")
-    public abstract Republic toDomainEntity(RepublicJpaEntity jpaEntity);
+    public Republic toDomainEntity(RepublicJpaEntity jpaEntity) {
+        if (jpaEntity == null) return null;
 
-    @Named("toEntityWithoutUsers")
-    @Mapping(target = "address", expression = "java(toAddress(jpaEntity))")
-    @Mapping(target = "owner", ignore = true)
-    @Mapping(target = "members", ignore = true)
-    public abstract Republic toDomainEntityWithoutUsers(RepublicJpaEntity jpaEntity);
+        Republic republic = Republic.builder()
+                .id(jpaEntity.getUuid())
+                .name(jpaEntity.getName())
+                .code(jpaEntity.getCode())
+                .address(toAddress(jpaEntity))
+                .createdAt(jpaEntity.getCreatedAt())
+                .updatedAt(jpaEntity.getUpdatedAt())
+                .build();
 
-    @Mapping(target = "street", source = "address.street")
-    @Mapping(target = "number", source = "address.number")
-    @Mapping(target = "complement", source = "address.complement")
-    @Mapping(target = "neighborhood", source = "address.neighborhood")
-    @Mapping(target = "city", source = "address.city")
-    @Mapping(target = "state", source = "address.state")
-    @Mapping(target = "zipCode", source = "address.zipCode")
-    @Mapping(target = "owner", source = "owner", qualifiedByName = "userJpaWithoutRepublic")
-    @Mapping(target = "members", expression = "java(domainEntity.getMembers().stream().map(userMapper::toJpaEntityWithoutRepublic).collect(java.util.stream.Collectors.toSet()))")
-    public abstract RepublicJpaEntity toJpaEntity(Republic domainEntity);
+        // Map owner
+        if (jpaEntity.getOwner() != null) {
+            User owner = commonMapperConfig.mapUserWithoutRepublic(jpaEntity.getOwner());
+            republic = Republic.builder()
+                    .id(republic.getId())
+                    .name(republic.getName())
+                    .code(republic.getCode())
+                    .address(republic.getAddress())
+                    .owner(owner)
+                    .createdAt(republic.getCreatedAt())
+                    .updatedAt(republic.getUpdatedAt())
+                    .build();
+        }
 
-    @Named("toJpaEntityWithoutUsers")
-    @Mapping(target = "street", source = "address.street")
-    @Mapping(target = "number", source = "address.number")
-    @Mapping(target = "complement", source = "address.complement")
-    @Mapping(target = "neighborhood", source = "address.neighborhood")
-    @Mapping(target = "city", source = "address.city")
-    @Mapping(target = "state", source = "address.state")
-    @Mapping(target = "zipCode", source = "address.zipCode")
-    @Mapping(target = "owner", ignore = true)
-    @Mapping(target = "members", ignore = true)
-    public abstract RepublicJpaEntity toJpaEntityWithoutUsers(Republic domainEntity);
+        // Map members if needed
+        if (jpaEntity.getMembers() != null && !jpaEntity.getMembers().isEmpty()) {
+            List<User> members = jpaEntity.getMembers().stream()
+                    .map(commonMapperConfig::mapUserWithoutRepublic)
+                    .collect(Collectors.toList());
+            republic = Republic.builder()
+                    .id(republic.getId())
+                    .name(republic.getName())
+                    .code(republic.getCode())
+                    .address(republic.getAddress())
+                    .owner(republic.getOwner())
+                    .members(members)
+                    .createdAt(republic.getCreatedAt())
+                    .updatedAt(republic.getUpdatedAt())
+                    .build();
+        }
+
+        return republic;
+    }
+
+    public RepublicJpaEntity toJpaEntity(Republic domainEntity) {
+        if (domainEntity == null) return null;
+
+        RepublicJpaEntity entity = new RepublicJpaEntity();
+        entity.setUuid(domainEntity.getId());
+        entity.setName(domainEntity.getName());
+        entity.setCode(domainEntity.getCode());
+
+        if (domainEntity.getAddress() != null) {
+            entity.setStreet(domainEntity.getAddress().getStreet());
+            entity.setNumber(domainEntity.getAddress().getNumber());
+            entity.setComplement(domainEntity.getAddress().getComplement());
+            entity.setNeighborhood(domainEntity.getAddress().getNeighborhood());
+            entity.setCity(domainEntity.getAddress().getCity());
+            entity.setState(domainEntity.getAddress().getState());
+            entity.setZipCode(domainEntity.getAddress().getZipCode());
+        }
+
+        if (domainEntity.getOwner() != null) {
+            entity.setOwner(commonMapperConfig.mapUserEntityWithoutRepublic(domainEntity.getOwner()));
+        }
+
+        if (domainEntity.getMembers() != null && !domainEntity.getMembers().isEmpty()) {
+            Set<UserJpaEntity> members = domainEntity.getMembers().stream()
+                    .map(commonMapperConfig::mapUserEntityWithoutRepublic)
+                    .collect(Collectors.toSet());
+            entity.setMembers(members);
+        }
+
+        entity.setCreatedAt(domainEntity.getCreatedAt());
+        entity.setUpdatedAt(domainEntity.getUpdatedAt());
+
+        return entity;
+    }
+
+    public Republic toDomainEntityWithoutUsers(RepublicJpaEntity jpaEntity) {
+        return commonMapperConfig.mapRepublicWithoutUsers(jpaEntity);
+    }
+
+    public RepublicJpaEntity toJpaEntityWithoutUsers(Republic domainEntity) {
+        return commonMapperConfig.mapRepublicEntityWithoutUsers(domainEntity);
+    }
 
     // Método para criar um objeto Address a partir dos campos do RepublicJpaEntity
     protected Address toAddress(RepublicJpaEntity entity) {

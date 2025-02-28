@@ -3,7 +3,6 @@ package com.rephelper.infrastructure.entity;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.UUID;
 
 import com.rephelper.domain.model.Task;
 import jakarta.persistence.*;

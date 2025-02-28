@@ -1,41 +1,81 @@
 package com.rephelper.application.mapper;
 
-import java.util.List;
-import java.util.Set;
-
-
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-
 import com.rephelper.application.dto.request.CreateUserRequest;
-
 import com.rephelper.application.dto.response.UserResponse;
 import com.rephelper.application.dto.response.UserSummaryResponse;
 import com.rephelper.domain.model.User;
-/**
- * Mapper para converter entre entidades de domínio e DTOs de usuário
- */
-@Mapper(componentModel = "spring")
-public abstract class UserDtoMapper {
+import org.springframework.stereotype.Component;
 
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "currentRepublic", ignore = true)
-    @Mapping(target = "isAdmin", constant = "false")
-    @Mapping(target = "isActiveResident", constant = "false")
-    @Mapping(target = "entryDate", ignore = true)
-    @Mapping(target = "departureDate", ignore = true)
-    @Mapping(target = "createdAt", ignore = true)
-    @Mapping(target = "lastLogin", ignore = true)
-    @Mapping(target = "status", constant = "ACTIVE")
-    public abstract User toUser(CreateUserRequest request);
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
-    @Mapping(target = "currentRepublicId", source = "currentRepublic.id")
-    @Mapping(target = "currentRepublicName", source = "currentRepublic.name")
-    public abstract UserResponse toUserResponse(User user);
+@Component
+public class UserDtoMapper {
 
-    public abstract List<UserResponse> toUserResponseList(List<User> users);
+    public User toUser(CreateUserRequest request) {
+        if (request == null) return null;
 
-    public abstract UserSummaryResponse toUserSummaryResponse(User user);
+        return User.builder()
+                .name(request.getName())
+                .email(request.getEmail())
+                .phoneNumber(request.getPhoneNumber())
+                .profilePictureUrl(request.getProfilePictureUrl())
+                .firebaseUid(request.getFirebaseUid())
+                .provider(request.getProvider())
+                .role(request.getRole() != null ? request.getRole() : User.UserRole.USER)
+                .status(User.UserStatus.ACTIVE)
+                .isAdmin(false)
+                .build();
+    }
 
-    public abstract Set<UserSummaryResponse> toUserSummaryResponseSet(Set<User> users);
+    public UserResponse toUserResponse(User user) {
+        if (user == null) return null;
+
+        return UserResponse.builder()
+                .id(user.getId())
+                .name(user.getName())
+                .email(user.getEmail())
+                .phoneNumber(user.getPhoneNumber())
+                .profilePictureUrl(user.getProfilePictureUrl())
+                .currentRepublicId(user.getCurrentRepublic() != null ? user.getCurrentRepublic().getId() : null)
+                .currentRepublicName(user.getCurrentRepublic() != null ? user.getCurrentRepublic().getName() : null)
+                .isAdmin(user.getIsAdmin())
+                .createdAt(user.getCreatedAt())
+                .lastLogin(user.getLastLogin())
+                .status(user.getStatus())
+                .firebaseUid(user.getFirebaseUid())
+                .provider(user.getProvider())
+                .role(user.getRole())
+                .entryDate(user.getEntryDate())
+                .departureDate(user.getDepartureDate())
+                .build();
+    }
+
+    public List<UserResponse> toUserResponseList(List<User> users) {
+        if (users == null) return null;
+
+        return users.stream()
+                .map(this::toUserResponse)
+                .collect(Collectors.toList());
+    }
+
+    public UserSummaryResponse toUserSummaryResponse(User user) {
+        if (user == null) return null;
+
+        return UserSummaryResponse.builder()
+                .id(user.getId())
+                .name(user.getName())
+                .email(user.getEmail())
+                .profilePictureUrl(user.getProfilePictureUrl())
+                .build();
+    }
+
+    public Set<UserSummaryResponse> toUserSummaryResponseSet(Set<User> users) {
+        if (users == null) return null;
+
+        return users.stream()
+                .map(this::toUserSummaryResponse)
+                .collect(Collectors.toSet());
+    }
 }

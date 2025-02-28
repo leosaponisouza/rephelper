@@ -10,7 +10,6 @@ import org.springframework.transaction.annotation.Transactional;
 import com.rephelper.domain.exception.ForbiddenException;
 import com.rephelper.domain.exception.ResourceNotFoundException;
 import com.rephelper.domain.exception.ValidationException;
-import com.rephelper.domain.model.Republic;
 import com.rephelper.domain.model.Task;
 import com.rephelper.domain.model.User;
 import com.rephelper.domain.port.in.TaskServicePort;
@@ -65,7 +64,7 @@ public class TaskServiceImpl implements TaskServicePort {
 
     @Override
     @Transactional(readOnly = true)
-    public Task getTaskById(UUID id) {
+    public Task getTaskById(Long id) {
         return taskRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Task not found with id: " + id));
     }
@@ -101,7 +100,7 @@ public class TaskServiceImpl implements TaskServicePort {
     }
 
     @Override
-    public Task updateTask(UUID id, String title, String description, LocalDateTime dueDate, String category, UUID modifierUserId) {
+    public Task updateTask(Long id, String title, String description, LocalDateTime dueDate, String category, UUID modifierUserId) {
         Task task = getTaskById(id);
 
         // Validar usuário
@@ -124,7 +123,7 @@ public class TaskServiceImpl implements TaskServicePort {
     }
 
     @Override
-    public Task completeTask(UUID id, UUID userId) {
+    public Task completeTask(Long id, UUID userId) {
         Task task = getTaskById(id);
 
         // Validar usuário
@@ -147,7 +146,7 @@ public class TaskServiceImpl implements TaskServicePort {
     }
 
     @Override
-    public Task cancelTask(UUID id, UUID userId) {
+    public Task cancelTask(Long id, UUID userId) {
         Task task = getTaskById(id);
 
         // Validar usuário
@@ -170,7 +169,7 @@ public class TaskServiceImpl implements TaskServicePort {
     }
 
     @Override
-    public void deleteTask(UUID id, UUID userId) {
+    public void deleteTask(Long id, UUID userId) {
         Task task = getTaskById(id);
 
         // Validar usuário
@@ -191,7 +190,7 @@ public class TaskServiceImpl implements TaskServicePort {
     }
 
     @Override
-    public Task assignTaskToUser(UUID taskId, UUID userId, UUID assignerUserId) {
+    public Task assignTaskToUser(Long taskId, UUID userId, UUID assignerUserId) {
         Task task = getTaskById(taskId);
 
         // Validar usuário a ser atribuído
@@ -226,7 +225,7 @@ public class TaskServiceImpl implements TaskServicePort {
     }
 
     @Override
-    public Task unassignTaskFromUser(UUID taskId, UUID userId, UUID unassignerUserId) {
+    public Task unassignTaskFromUser(Long taskId, UUID userId, UUID unassignerUserId) {
         Task task = getTaskById(taskId);
 
         // Validar usuário a ser removido

@@ -75,17 +75,11 @@ public class UserJpaAdapter implements UserRepositoryPort {
 
     @Override
     public List<User> findByCurrentRepublicId(UUID republicId) {
-        return userJpaRepository.findByCurrentRepublicId(republicId).stream()
+        return userJpaRepository.findByCurrentRepublicUuid(republicId).stream()
                 .map(userMapper::toDomainEntity)
                 .collect(Collectors.toList());
     }
 
-    @Override
-    public List<User> findByCurrentRepublicIdAndIsActiveResident(UUID republicId, Boolean isActiveResident) {
-        return userJpaRepository.findByCurrentRepublicIdAndIsActiveResident(republicId, isActiveResident).stream()
-                .map(userMapper::toDomainEntity)
-                .collect(Collectors.toList());
-    }
 
     @Override
     public void delete(User user) {

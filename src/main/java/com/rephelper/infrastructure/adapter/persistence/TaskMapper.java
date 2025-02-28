@@ -1,32 +1,112 @@
 package com.rephelper.infrastructure.adapter.persistence;
 
 import com.rephelper.domain.model.Task;
+import com.rephelper.infrastructure.config.CommonMapperConfig;
 import com.rephelper.infrastructure.entity.TaskJpaEntity;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
-/**
- * Mapper para converter entre Task do domínio e TaskJpaEntity
- */
-@Mapper(componentModel = "spring", uses = {RepublicMapper.class, UserMapper.class})
-public abstract class TaskMapper {
+import java.util.HashSet;
+import java.util.stream.Collectors;
 
-    @Autowired
-    protected RepublicMapper republicMapper;
+@Component
+public class TaskMapper {
 
     @Autowired
-    protected UserMapper userMapper;
+    private CommonMapperConfig commonMapperConfig;
 
-    @Mapping(target = "republic", source = "republic", qualifiedByName = "toEntityWithoutUsers")
-    @Mapping(target = "assignedUsers", expression = "java(jpaEntity.getAssignedUsers().stream().map(userMapper::toDomainEntityWithoutRepublic).collect(java.util.stream.Collectors.toSet()))")
-    public abstract Task toDomainEntity(TaskJpaEntity jpaEntity);
+    @Autowired
+    private RepublicMapper republicMapper;
 
-    @Mapping(target = "republic", source = "republic", qualifiedByName = "toJpaEntityWithoutUsers")
-    @Mapping(target = "assignedUsers", expression = "java(domainEntity.getAssignedUsers().stream().map(userMapper::toJpaEntityWithoutRepublic).collect(java.util.stream.Collectors.toSet()))")
-    public abstract TaskJpaEntity toJpaEntity(Task domainEntity);
+    @Autowired
+    private UserMapper userMapper;
 
-    // Método para mapear enums de status
+    public Task toDomainEntity(TaskJpaEntity jpaEntity) {
+        if (jpaEntity == null) return null;
+
+        Task task = Task.builder()
+                .id(jpaEntity.getId())
+                .title(jpaEntity.getTitle())
+                .description(jpaEntity.getDescription())
+                .status(mapToDomainTaskStatus(jpaEntity.getStatus()))
+                .dueDate(jpaEntity.getDueDate())
+                .completedAt(jpaEntity.getCompletedAt())
+                .category(jpaEntity.getCategory())
+                .createdAt(jpaEntity.getCreatedAt())
+                .updatedAt(jpaEntity.getUpdatedAt())
+                .build();
+
+        // Map republic if present
+        if (jpaEntity.getRepublic() != null) {
+            task = Task.builder()
+                    .id(task.getId())
+                    .title(task.getTitle())
+                    .description(task.getDescription())
+                    .republic(republicMapper.toDomainEntityWithoutUsers(jpaEntity.getRepublic()))
+                    .status(task.getStatus())
+                    .dueDate(task.getDueDate())
+                    .completedAt(task.getCompletedAt())
+                    .category(task.getCategory())
+                    .createdAt(task.getCreatedAt())
+                    .updatedAt(task.getUpdatedAt())
+                    .build();
+        }
+
+        // Map assigned users if present
+        if (jpaEntity.getAssignedUsers() != null && !jpaEntity.getAssignedUsers().isEmpty()) {
+            task = Task.builder()
+                    .id(task.getId())
+                    .title(task.getTitle())
+                    .description(task.getDescription())
+                    .republic(task.getRepublic())
+                    .assignedUsers(jpaEntity.getAssignedUsers().stream()
+                            .map(userMapper::toDomainEntityWithoutRepublic)
+                            .collect(Collectors.toSet()))
+                    .status(task.getStatus())
+                    .dueDate(task.getDueDate())
+                    .completedAt(task.getCompletedAt())
+                    .category(task.getCategory())
+                    .createdAt(task.getCreatedAt())
+                    .updatedAt(task.getUpdatedAt())
+                    .build();
+        }
+
+        return task;
+    }
+
+    public TaskJpaEntity toJpaEntity(Task domainEntity) {
+        if (domainEntity == null) return null;
+
+        TaskJpaEntity entity = TaskJpaEntity.builder()
+                .id(domainEntity.getId())
+                .title(domainEntity.getTitle())
+                .description(domainEntity.getDescription())
+                .status(mapToJpaTaskStatus(domainEntity.getStatus()))
+                .dueDate(domainEntity.getDueDate())
+                .completedAt(domainEntity.getCompletedAt())
+                .category(domainEntity.getCategory())
+                .createdAt(domainEntity.getCreatedAt())
+                .updatedAt(domainEntity.getUpdatedAt())
+                .build();
+
+        // Map republic if present
+        if (domainEntity.getRepublic() != null) {
+            entity.setRepublic(republicMapper.toJpaEntityWithoutUsers(domainEntity.getRepublic()));
+        }
+
+        // Map assigned users if present
+        if (domainEntity.getAssignedUsers() != null && !domainEntity.getAssignedUsers().isEmpty()) {
+            entity.setAssignedUsers(domainEntity.getAssignedUsers().stream()
+                    .map(userMapper::toJpaEntityWithoutRepublic)
+                    .collect(Collectors.toSet()));
+        } else {
+            entity.setAssignedUsers(new HashSet<>());
+        }
+
+        return entity;
+    }
+
+    // Status mapping methods
     public Task.TaskStatus mapToJpaTaskStatus(Task.TaskStatus domainStatus) {
         if (domainStatus == null) return null;
 

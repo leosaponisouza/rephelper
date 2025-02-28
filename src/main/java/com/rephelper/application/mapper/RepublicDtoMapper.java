@@ -6,40 +6,66 @@ import com.rephelper.application.dto.response.AddressResponse;
 import com.rephelper.application.dto.response.RepublicResponse;
 import com.rephelper.domain.model.Address;
 import com.rephelper.domain.model.Republic;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
-/**
- * Mapper para converter entre entidades de domínio e DTOs de república
- */
-@Mapper(componentModel = "spring")
-public abstract class RepublicDtoMapper {
+@Component
+public class RepublicDtoMapper {
 
     @Autowired
     protected UserDtoMapper userDtoMapper;
 
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "code", ignore = true)
-    @Mapping(target = "address", expression = "java(toAddress(request))")
-    @Mapping(target = "owner", ignore = true)
-    @Mapping(target = "members", ignore = true)
-    @Mapping(target = "createdAt", ignore = true)
-    @Mapping(target = "updatedAt", ignore = true)
-    public abstract Republic toRepublic(CreateRepublicRequest request);
+    public Republic toRepublic(CreateRepublicRequest request) {
+        if (request == null) return null;
 
-    @Mapping(target = "ownerId", source = "owner.id")
-    @Mapping(target = "ownerName", source = "owner.name")
-    public abstract RepublicResponse toRepublicResponse(Republic republic);
+        return Republic.builder()
+                .name(request.getName())
+                .address(toAddress(request))
+                .build();
+    }
 
-    public abstract List<RepublicResponse> toRepublicResponseList(List<Republic> republics);
+    public RepublicResponse toRepublicResponse(Republic republic) {
+        if (republic == null) return null;
 
-    @Mapping(target = "fullAddress", expression = "java(address.getFullAddress())")
-    public abstract AddressResponse toAddressResponse(Address address);
+        return RepublicResponse.builder()
+                .id(republic.getId())
+                .name(republic.getName())
+                .code(republic.getCode())
+                .address(toAddressResponse(republic.getAddress()))
+                .ownerId(republic.getOwner() != null ? republic.getOwner().getId() : null)
+                .ownerName(republic.getOwner() != null ? republic.getOwner().getName() : null)
+                .createdAt(republic.getCreatedAt())
+                .updatedAt(republic.getUpdatedAt())
+                .build();
+    }
 
-    // Método para criar um objeto Address a partir do DTO de criação
+    public List<RepublicResponse> toRepublicResponseList(List<Republic> republics) {
+        if (republics == null) return null;
+
+        return republics.stream()
+                .map(this::toRepublicResponse)
+                .collect(Collectors.toList());
+    }
+
+    public AddressResponse toAddressResponse(Address address) {
+        if (address == null) return null;
+
+        return AddressResponse.builder()
+                .street(address.getStreet())
+                .number(address.getNumber())
+                .complement(address.getComplement())
+                .neighborhood(address.getNeighborhood())
+                .city(address.getCity())
+                .state(address.getState())
+                .zipCode(address.getZipCode())
+                .fullAddress(address.getFullAddress())
+                .build();
+    }
+
+    // Method to create an Address object from the creation DTO
     protected Address toAddress(CreateRepublicRequest request) {
         if (request == null) return null;
 
@@ -54,7 +80,7 @@ public abstract class RepublicDtoMapper {
                 .build();
     }
 
-    // Método para criar um objeto Address a partir do DTO de atualização
+    // Method to create an Address object from the update DTO
     public Address toAddress(UpdateRepublicRequest request) {
         if (request == null) return null;
 

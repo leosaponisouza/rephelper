@@ -90,7 +90,7 @@ public class TaskController {
     @GetMapping("/{id}")
     @Operation(summary = "Get task by ID", description = "Retrieves task details by ID")
     public ResponseEntity<TaskResponse> getTaskById(
-            @PathVariable UUID id,
+            @PathVariable Long id,
             @AuthenticationPrincipal CustomUserDetails currentUser) {
 
         Task task = taskService.getTaskById(id);
@@ -159,7 +159,7 @@ public class TaskController {
     @PutMapping("/{id}")
     @Operation(summary = "Update task", description = "Updates task details")
     public ResponseEntity<TaskResponse> updateTask(
-            @PathVariable UUID id,
+            @PathVariable Long id,
             @Valid @RequestBody UpdateTaskRequest request,
             @AuthenticationPrincipal CustomUserDetails currentUser) {
 
@@ -178,7 +178,7 @@ public class TaskController {
     @PostMapping("/{id}/complete")
     @Operation(summary = "Complete task", description = "Marks a task as completed")
     public ResponseEntity<TaskResponse> completeTask(
-            @PathVariable UUID id,
+            @PathVariable Long id,
             @AuthenticationPrincipal CustomUserDetails currentUser) {
 
         // Complete task
@@ -190,7 +190,7 @@ public class TaskController {
     @PostMapping("/{id}/cancel")
     @Operation(summary = "Cancel task", description = "Cancels a task")
     public ResponseEntity<TaskResponse> cancelTask(
-            @PathVariable UUID id,
+            @PathVariable Long id,
             @AuthenticationPrincipal CustomUserDetails currentUser) {
 
         // Cancel task
@@ -202,7 +202,7 @@ public class TaskController {
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete task", description = "Deletes a task")
     public ResponseEntity<ApiResponse> deleteTask(
-            @PathVariable UUID id,
+            @PathVariable Long id,
             @AuthenticationPrincipal CustomUserDetails currentUser) {
 
         // Delete task
@@ -217,7 +217,7 @@ public class TaskController {
     @PostMapping("/{id}/assign")
     @Operation(summary = "Assign task", description = "Assigns a task to a user")
     public ResponseEntity<TaskResponse> assignTask(
-            @PathVariable UUID id,
+            @PathVariable Long id,
             @Valid @RequestBody TaskAssignmentRequest request,
             @AuthenticationPrincipal CustomUserDetails currentUser) {
 
@@ -230,7 +230,7 @@ public class TaskController {
     @PostMapping("/{id}/unassign")
     @Operation(summary = "Unassign task", description = "Removes task assignment from a user")
     public ResponseEntity<TaskResponse> unassignTask(
-            @PathVariable UUID id,
+            @PathVariable Long id,
             @Valid @RequestBody TaskAssignmentRequest request,
             @AuthenticationPrincipal CustomUserDetails currentUser) {
 

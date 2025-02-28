@@ -56,11 +56,6 @@ public interface UserServicePort {
     List<User> getResidentsByRepublicId(UUID republicId);
 
     /**
-     * Obtém os residentes ativos de uma república
-     */
-    List<User> getActiveResidentsByRepublicId(UUID republicId);
-
-    /**
      * Remove um usuário
      */
     void deleteUser(UUID id);

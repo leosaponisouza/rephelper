@@ -5,50 +5,73 @@ import com.rephelper.application.dto.request.UpdateTaskRequest;
 import com.rephelper.application.dto.response.TaskResponse;
 import com.rephelper.domain.model.Republic;
 import com.rephelper.domain.model.Task;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.mapstruct.Named;
-import java.util.List;
+import org.springframework.stereotype.Component;
 
-/**
- * Mapper para converter entre entidades de domínio e DTOs de tarefa
- */
-@Mapper(componentModel = "spring")
-public abstract class TaskDtoMapper {
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Component
+public class TaskDtoMapper {
 
     @Autowired
     protected UserDtoMapper userDtoMapper;
 
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "republic", expression = "java(toRepublic(request))")
-    @Mapping(target = "assignedUsers", ignore = true)
-    @Mapping(target = "status", constant = "PENDING")
-    @Mapping(target = "completedAt", ignore = true)
-    @Mapping(target = "createdAt", ignore = true)
-    @Mapping(target = "updatedAt", ignore = true)
-    public abstract Task toTask(CreateTaskRequest request);
+    public Task toTask(CreateTaskRequest request) {
+        if (request == null) return null;
 
-    @Mapping(target = "republicId", source = "republic.id")
-    @Mapping(target = "republicName", source = "republic.name")
-    @Mapping(target = "assignedUsers", expression = "java(userDtoMapper.toUserSummaryResponseSet(task.getAssignedUsers()))")
-    public abstract TaskResponse toTaskResponse(Task task);
+        Task task = Task.builder()
+                .title(request.getTitle())
+                .description(request.getDescription())
+                .dueDate(request.getDueDate())
+                .category(request.getCategory())
+                .status(Task.TaskStatus.PENDING)
+                .build();
 
-    public abstract List<TaskResponse> toTaskResponseList(List<Task> tasks);
+        if (request.getRepublicId() != null) {
+            task = Task.builder()
+                    .title(task.getTitle())
+                    .description(task.getDescription())
+                    .dueDate(task.getDueDate())
+                    .category(task.getCategory())
+                    .status(task.getStatus())
+                    .republic(Republic.builder().id(request.getRepublicId()).build())
+                    .build();
+        }
 
-    // Método para criar um objeto Republic com apenas o ID preenchido
-    protected Republic toRepublic(CreateTaskRequest request) {
-        if (request == null || request.getRepublicId() == null) return null;
+        return task;
+    }
 
-        return Republic.builder()
-                .id(request.getRepublicId())
+    public TaskResponse toTaskResponse(Task task) {
+        if (task == null) return null;
+
+        return TaskResponse.builder()
+                .id(task.getId())
+                .title(task.getTitle())
+                .description(task.getDescription())
+                .republicId(task.getRepublic() != null ? task.getRepublic().getId() : null)
+                .republicName(task.getRepublic() != null ? task.getRepublic().getName() : null)
+                .assignedUsers(task.getAssignedUsers() != null ?
+                        userDtoMapper.toUserSummaryResponseSet(task.getAssignedUsers()) : null)
+                .status(task.getStatus())
+                .dueDate(task.getDueDate())
+                .completedAt(task.getCompletedAt())
+                .category(task.getCategory())
+                .createdAt(task.getCreatedAt())
+                .updatedAt(task.getUpdatedAt())
                 .build();
     }
 
-    // Método para aplicar atualizações de uma tarefa
-    @Named("applyUpdates")
+    public List<TaskResponse> toTaskResponseList(List<Task> tasks) {
+        if (tasks == null) return null;
+
+        return tasks.stream()
+                .map(this::toTaskResponse)
+                .collect(Collectors.toList());
+    }
+
     public Task applyUpdates(Task task, UpdateTaskRequest request) {
-        if (request == null) return task;
+        if (task == null || request == null) return task;
 
         if (request.getTitle() != null) {
             task.update(

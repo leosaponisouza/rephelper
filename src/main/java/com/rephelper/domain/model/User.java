@@ -29,7 +29,6 @@ public class User {
     private UserStatus status;
     private Republic currentRepublic;
     private Boolean isAdmin;
-    private Boolean isActiveResident;
     private LocalDateTime entryDate;
     private LocalDateTime departureDate;
     private LocalDateTime createdAt;
@@ -101,7 +100,6 @@ public class User {
 
         // Limpa a data de saída e marca como ativo
         this.departureDate = null;
-        this.isActiveResident = true;
     }
 
     /**
@@ -110,7 +108,6 @@ public class User {
     public void leaveRepublic() {
         if (this.currentRepublic != null) {
             this.departureDate = LocalDateTime.now();
-            this.isActiveResident = false;
             this.isAdmin = false;
             this.currentRepublic = null;
         }

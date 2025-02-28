@@ -57,11 +57,6 @@ public interface UserRepositoryPort {
     List<User> findByCurrentRepublicId(UUID republicId);
 
     /**
-     * Busca usuários ativos em uma república
-     */
-    List<User> findByCurrentRepublicIdAndIsActiveResident(UUID republicId, Boolean isActiveResident);
-
-    /**
      * Remove um usuário
      */
     void delete(User user);

@@ -2,6 +2,8 @@ package com.rephelper.interfaces.rest.auth;
 
 import java.util.UUID;
 
+import com.rephelper.domain.exception.ResourceNotFoundException;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -89,5 +91,33 @@ public class AuthController {
                 .token(newToken)
                 .user(userResponse)
                 .build());
+    }
+
+    @PostMapping("/signup")
+    @Operation(summary = "Sign up with Firebase token", description = "Creates a new user account using Firebase authentication")
+    public ResponseEntity<AuthResponse> signup(@Valid @RequestBody CreateUserRequest request) {
+
+        try {
+            User existingUser = userService.getUserByFirebaseUid(request.getFirebaseUid());
+            // If we get here, user exists - just log them in
+            String token = jwtTokenProvider.generateToken(existingUser.getId());
+            return ResponseEntity.ok(AuthResponse.builder()
+                    .token(token)
+                    .user(userDtoMapper.toUserResponse(existingUser))
+                    .build());
+        } catch (ResourceNotFoundException e) {
+            // User doesn't exist, create a new one
+            User newUser = userDtoMapper.toUser(request);
+            User createdUser = userService.createUser(newUser);
+
+            // Generate JWT token
+            String token = jwtTokenProvider.generateToken(createdUser.getId());
+
+            // Return auth response with token and user
+            return ResponseEntity.status(HttpStatus.CREATED).body(AuthResponse.builder()
+                    .token(token)
+                    .user(userDtoMapper.toUserResponse(createdUser))
+                    .build());
+        }
     }
 }

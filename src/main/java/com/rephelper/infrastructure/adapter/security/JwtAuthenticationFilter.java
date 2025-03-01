@@ -34,7 +34,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             if (StringUtils.hasText(jwt)) {
                 // Verificar se é um endpoint de login (que aceita token Firebase)
                 String path = request.getRequestURI();
-                if (path.endsWith("/auth/login")) {
+                if (path.endsWith("/auth/login") || path.endsWith("/auth/logout") || path.endsWith("/users")) {
                     // Não validar aqui, deixe o controller fazer isso
                 } else {
                     // Para outros endpoints, validar como um JWT normal

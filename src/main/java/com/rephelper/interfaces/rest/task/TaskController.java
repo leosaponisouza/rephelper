@@ -35,7 +35,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/tasks")
+@RequestMapping("api/v1/tasks")
 @RequiredArgsConstructor
 @Tag(name = "Tasks", description = "Task management endpoints")
 public class TaskController {

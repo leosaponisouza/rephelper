@@ -1,5 +1,6 @@
 package com.rephelper.infrastructure.adapter.security;
 
+import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -15,7 +16,9 @@ public class CustomUserDetails implements UserDetails {
 
     private static final long serialVersionUID = 1L;
 
+    @Getter
     private final UUID userId;
+    @Getter
     private final String role;
     private final Collection<? extends GrantedAuthority> authorities;
 
@@ -38,14 +41,6 @@ public class CustomUserDetails implements UserDetails {
     @Override
     public String getUsername() {
         return userId.toString();
-    }
-
-    public UUID getUserId() {
-        return userId;
-    }
-
-    public String getRole() {
-        return role;
     }
 
     @Override

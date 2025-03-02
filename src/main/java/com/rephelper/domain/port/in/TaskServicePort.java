@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+import com.rephelper.application.dto.request.UpdateTaskRequest;
 import com.rephelper.domain.model.Task;
 
 /**
@@ -39,7 +40,7 @@ public interface TaskServicePort {
     /**
      * Atualiza uma tarefa existente
      */
-    Task updateTask(Long id, String title, String description, LocalDateTime dueDate, String category, UUID modifierUserId);
+    Task updateTask(Long id, UpdateTaskRequest request, UUID modifierUserId);
 
     /**
      * Marca uma tarefa como concluída

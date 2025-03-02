@@ -32,7 +32,7 @@ public class UserDtoMapper {
         if (user == null) return null;
 
         return UserResponse.builder()
-                .id(user.getId())
+                .uid(user.getId())
                 .name(user.getName())
                 .email(user.getEmail())
                 .phoneNumber(user.getPhoneNumber())

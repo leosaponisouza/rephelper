@@ -18,5 +18,7 @@ public class UpdateTaskRequest {
 
     private LocalDateTime dueDate;
 
+    private String status;
+
     private String category;
 }

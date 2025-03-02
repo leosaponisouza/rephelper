@@ -70,18 +70,4 @@ public class TaskDtoMapper {
                 .collect(Collectors.toList());
     }
 
-    public Task applyUpdates(Task task, UpdateTaskRequest request) {
-        if (task == null || request == null) return task;
-
-        if (request.getTitle() != null) {
-            task.update(
-                    request.getTitle(),
-                    request.getDescription(),
-                    request.getDueDate(),
-                    request.getCategory()
-            );
-        }
-
-        return task;
-    }
 }

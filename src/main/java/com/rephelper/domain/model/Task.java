@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
+import com.rephelper.application.dto.request.UpdateTaskRequest;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -84,27 +85,36 @@ public class Task {
     /**
      * Atualiza informações da tarefa
      */
-    public void update(String title, String description, LocalDateTime dueDate, String category) {
+    public void update(UpdateTaskRequest request) {
         if (title != null && !title.isBlank()) {
-            this.title = title;
+            this.title = request.getTitle();
         }
 
         if (description != null) {
-            this.description = description;
+            this.description = request.getDescription();
         }
 
         if (dueDate != null) {
-            this.dueDate = dueDate;
+            this.dueDate = request.getDueDate();
         }
 
         if (category != null) {
-            this.category = category;
+            this.category = request.getCategory();
+        }
+        if (request.getStatus() != null &&
+                request.getStatus().equals(TaskStatus.IN_PROGRESS.toString())) {
+            startProgress();
+        }
+        if (request.getStatus() != null &&
+                request.getStatus().equals(TaskStatus.PENDING.toString())) {
+            this.status = TaskStatus.PENDING;
         }
 
         this.updatedAt = LocalDateTime.now();
 
         // Atualiza o status com base na nova data de vencimento
         updateStatus();
+
     }
 
     /**

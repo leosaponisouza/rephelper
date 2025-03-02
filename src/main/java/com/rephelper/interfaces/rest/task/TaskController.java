@@ -166,10 +166,7 @@ public class TaskController {
         // Update task
         Task updatedTask = taskService.updateTask(
                 id,
-                request.getTitle(),
-                request.getDescription(),
-                request.getDueDate(),
-                request.getCategory(),
+                request,
                 currentUser.getUserId());
 
         return ResponseEntity.ok(taskDtoMapper.toTaskResponse(updatedTask));

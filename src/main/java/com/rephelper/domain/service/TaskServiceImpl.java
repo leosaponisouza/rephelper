@@ -1,9 +1,9 @@
 package com.rephelper.domain.service;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+import com.rephelper.application.dto.request.UpdateTaskRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -100,7 +100,7 @@ public class TaskServiceImpl implements TaskServicePort {
     }
 
     @Override
-    public Task updateTask(Long id, String title, String description, LocalDateTime dueDate, String category, UUID modifierUserId) {
+    public Task updateTask(Long id, UpdateTaskRequest request, UUID modifierUserId) {
         Task task = getTaskById(id);
 
         // Validar usuário
@@ -116,7 +116,7 @@ public class TaskServiceImpl implements TaskServicePort {
         }
 
         // Atualizar tarefa
-        task.update(title, description, dueDate, category);
+        task.update(request);
 
         return taskRepository.save(task);
     }

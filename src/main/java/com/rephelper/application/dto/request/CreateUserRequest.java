@@ -24,6 +24,8 @@ public class CreateUserRequest {
     @NotBlank(message = "Name is required")
     private String name;
 
+    private String nickname;
+
     @NotBlank(message = "Email is required")
     @Email(message = "Invalid email format")
     private String email;

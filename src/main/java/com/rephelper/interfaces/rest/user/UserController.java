@@ -83,6 +83,7 @@ public class UserController {
 
         User userToUpdate = User.builder()
                 .name(request.getName())
+                .nickname(request.getNickname())
                 .email(request.getEmail())
                 .phoneNumber(request.getPhoneNumber())
                 .profilePictureUrl(request.getProfilePictureUrl())

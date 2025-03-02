@@ -18,6 +18,7 @@ public class UserDtoMapper {
 
         return User.builder()
                 .name(request.getName())
+                .nickname(request.getNickname())
                 .email(request.getEmail())
                 .phoneNumber(request.getPhoneNumber())
                 .profilePictureUrl(request.getProfilePictureUrl())
@@ -34,6 +35,7 @@ public class UserDtoMapper {
         return UserResponse.builder()
                 .uid(user.getId())
                 .name(user.getName())
+                .nickname(user.getNickname())
                 .email(user.getEmail())
                 .phoneNumber(user.getPhoneNumber())
                 .profilePictureUrl(user.getProfilePictureUrl())
@@ -64,6 +66,7 @@ public class UserDtoMapper {
         return UserSummaryResponse.builder()
                 .id(user.getId())
                 .name(user.getName())
+                .nickname(user.getNickname())
                 .email(user.getEmail())
                 .profilePictureUrl(user.getProfilePictureUrl())
                 .build();

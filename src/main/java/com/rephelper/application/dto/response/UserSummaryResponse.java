@@ -15,6 +15,7 @@ import java.util.UUID; /**
 public class UserSummaryResponse {
     private UUID id;
     private String name;
+    private String nickname;
     private String email;
     private String profilePictureUrl;
 }

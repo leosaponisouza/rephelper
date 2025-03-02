@@ -41,6 +41,7 @@ public class UserServiceImpl implements UserServicePort {
             user = User.builder()
                     .id(user.getId())
                     .name(user.getName())
+                    .nickname(user.getNickname())
                     .email(user.getEmail())
                     .phoneNumber(user.getPhoneNumber())
                     .profilePictureUrl(user.getProfilePictureUrl())
@@ -90,6 +91,7 @@ public class UserServiceImpl implements UserServicePort {
         // Atualizar campos
         existingUser.updateProfile(
                 userDetails.getName(),
+                userDetails.getNickname(),
                 userDetails.getEmail(),
                 userDetails.getPhoneNumber(),
                 userDetails.getProfilePictureUrl());
@@ -134,6 +136,7 @@ public class UserServiceImpl implements UserServicePort {
             user = User.builder()
                     .id(user.getId())
                     .name(user.getName())
+                    .nickname(user.getNickname())
                     .email(user.getEmail())
                     .phoneNumber(user.getPhoneNumber())
                     .profilePictureUrl(user.getProfilePictureUrl())
@@ -152,6 +155,7 @@ public class UserServiceImpl implements UserServicePort {
             user = User.builder()
                     .id(user.getId())
                     .name(user.getName())
+                    .nickname(user.getNickname())
                     .email(user.getEmail())
                     .phoneNumber(user.getPhoneNumber())
                     .profilePictureUrl(user.getProfilePictureUrl())

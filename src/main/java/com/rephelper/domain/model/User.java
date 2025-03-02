@@ -20,6 +20,7 @@ import lombok.NoArgsConstructor;
 public class User {
     private UUID id;
     private String name;
+    private String nickname;
     private String email;
     private String phoneNumber;
     private String profilePictureUrl;
@@ -127,9 +128,13 @@ public class User {
     /**
      * Atualiza informações básicas do usuário
      */
-    public void updateProfile(String name, String email, String phoneNumber, String profilePictureUrl) {
+    public void updateProfile(String name, String nickname, String email, String phoneNumber, String profilePictureUrl) {
         if (name != null && !name.isBlank()) {
             this.name = name;
+        }
+
+        if (nickname != null) {
+            this.nickname = nickname;
         }
 
         if (email != null && !email.isBlank()) {

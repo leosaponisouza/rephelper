@@ -44,6 +44,9 @@ public class UserJpaEntity {
     @Column(nullable = false)
     private String name;
 
+    @Column
+    private String nickname;
+
     @Column(nullable = false, unique = true)
     private String email;
 
@@ -104,5 +107,4 @@ public class UserJpaEntity {
             return value;
         }
     }
-
 }

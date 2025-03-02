@@ -13,6 +13,8 @@ import lombok.NoArgsConstructor;
 public class UpdateUserRequest {
     private String name;
 
+    private String nickname;
+
     @Email(message = "Invalid email format")
     private String email;
 

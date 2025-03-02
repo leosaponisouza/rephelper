@@ -1,0 +1,310 @@
+create table if not exists public.republics
+(
+    uuid         uuid                     default gen_random_uuid() not null
+        primary key,
+    name         varchar(255)                                       not null,
+    code         varchar(8)                                         not null
+        unique,
+    street       varchar(255)                                       not null,
+    number       varchar(20)                                        not null,
+    complement   varchar(255),
+    neighborhood varchar(255)                                       not null,
+    city         varchar(255)                                       not null,
+    state        varchar(2)                                         not null,
+    zip_code     varchar(10)                                        not null,
+    created_at   timestamp with time zone default CURRENT_TIMESTAMP,
+    updated_at   timestamp with time zone default CURRENT_TIMESTAMP,
+    owner_id     uuid                                               not null
+);
+
+alter table public.republics
+    owner to postgres;
+
+create index if not exists idx_republic_code
+    on public.republics (code);
+
+create index if not exists idx_republic_owner_id
+    on public.republics (owner_id);
+
+create table if not exists public.users
+(
+    uuid                uuid                     default gen_random_uuid() not null
+        constraint user_pkey
+            primary key,
+    name                varchar(255)                                       not null,
+    email               varchar(255)                                       not null
+        constraint user_email_key
+            unique,
+    phone_number        varchar(20),
+    profile_picture_url varchar(255),
+    current_republic_id uuid
+        constraint fk_user_republic
+            references public.republics
+            on delete set null,
+    status              varchar(255)             default 'active'::user_status,
+    created_at          timestamp with time zone default CURRENT_TIMESTAMP,
+    last_login          timestamp with time zone,
+    provider            varchar(255)                                       not null,
+    firebase_uid        varchar(255)                                       not null
+        constraint user_firebase_uid_key
+            unique,
+    is_admin            boolean                  default false,
+    entry_date          timestamp with time zone,
+    departure_date      timestamp with time zone,
+    nickname            varchar(255)
+);
+
+alter table public.users
+    owner to postgres;
+
+alter table public.republics
+    add constraint fk_republic_owner
+        foreign key (owner_id) references public.users
+            on delete restrict;
+
+create index if not exists idx_user_email
+    on public.users (email);
+
+create index if not exists idx_user_firebase_uid
+    on public.users (firebase_uid);
+
+create index if not exists idx_user_current_republic_id
+    on public.users (current_republic_id);
+
+create table if not exists public.tasks
+(
+    id           serial
+        primary key,
+    republic_id  uuid         not null
+        constraint fk_task_republic
+            references public.republics
+            on delete cascade,
+    title        varchar(255) not null,
+    description  text,
+    due_date     timestamp with time zone,
+    category     varchar(50),
+    status       varchar(50)              default 'pending'::character varying,
+    created_at   timestamp with time zone default CURRENT_TIMESTAMP,
+    updated_at   timestamp with time zone default CURRENT_TIMESTAMP,
+    completed_at timestamp
+);
+
+alter table public.tasks
+    owner to postgres;
+
+create index if not exists idx_task_republic_id
+    on public.tasks (republic_id);
+
+create table if not exists public.user_tasks
+(
+    user_id uuid    not null
+        constraint fk_user_tasks_user
+            references public.users
+            on delete cascade,
+    task_id integer not null
+        constraint fk_user_tasks_task
+            references public.tasks
+            on delete cascade,
+    primary key (user_id, task_id)
+);
+
+alter table public.user_tasks
+    owner to postgres;
+
+create table if not exists public.events
+(
+    id          serial
+        primary key,
+    republic_id uuid                     not null
+        constraint fk_event_republic
+            references public.republics
+            on delete cascade,
+    title       varchar(255)             not null,
+    description text,
+    start_date  timestamp with time zone not null,
+    end_date    timestamp with time zone not null,
+    location    varchar(255),
+    created_at  timestamp with time zone default CURRENT_TIMESTAMP
+);
+
+alter table public.events
+    owner to postgres;
+
+create index if not exists idx_event_republic_id
+    on public.events (republic_id);
+
+create table if not exists public.event_invitations
+(
+    user_id  uuid    not null
+        constraint fk_event_invitations_user
+            references public.users
+            on delete cascade,
+    event_id integer not null
+        constraint fk_event_invitations_event
+            references public.events
+            on delete cascade,
+    status   event_participant_status default 'invited'::event_participant_status,
+    primary key (user_id, event_id)
+);
+
+alter table public.event_invitations
+    owner to postgres;
+
+create table if not exists public.expenses
+(
+    id           serial
+        primary key,
+    republic_id  uuid           not null
+        constraint fk_expenses_republic
+            references public.republics
+            on delete cascade,
+    description  text           not null,
+    amount       numeric(10, 2) not null,
+    expense_date date           not null,
+    category     expense_category_type,
+    receipt_url  varchar(255),
+    created_at   timestamp with time zone default CURRENT_TIMESTAMP
+);
+
+alter table public.expenses
+    owner to postgres;
+
+create index if not exists idx_expenses_republic_id
+    on public.expenses (republic_id);
+
+create table if not exists public.expense_splits
+(
+    expense_id integer        not null
+        constraint fk_expense_splits_expense
+            references public.expenses
+            on delete cascade,
+    user_id    uuid           not null
+        constraint fk_expense_splits_user
+            references public.users
+            on delete cascade,
+    amount     numeric(10, 2) not null,
+    paid       boolean default false,
+    paid_at    timestamp with time zone,
+    primary key (expense_id, user_id)
+);
+
+alter table public.expense_splits
+    owner to postgres;
+
+create index if not exists idx_expense_splits_expense_id
+    on public.expense_splits (expense_id);
+
+create index if not exists idx_expense_splits_user_id
+    on public.expense_splits (user_id);
+
+create table if not exists public.inventory_items
+(
+    id          serial
+        primary key,
+    republic_id uuid         not null
+        constraint fk_inventory_items_republic
+            references public.republics
+            on delete cascade,
+    item_name   varchar(255) not null,
+    quantity    integer      not null,
+    condition   item_condition_type,
+    created_at  timestamp with time zone default CURRENT_TIMESTAMP
+);
+
+alter table public.inventory_items
+    owner to postgres;
+
+create index if not exists idx_inventory_items_republic_id
+    on public.inventory_items (republic_id);
+
+create table if not exists public.polls
+(
+    id          serial
+        primary key,
+    republic_id uuid                     not null
+        constraint fk_polls_republic
+            references public.republics
+            on delete cascade,
+    question    text                     not null,
+    start_date  timestamp with time zone not null,
+    end_date    timestamp with time zone not null,
+    created_by  uuid                     not null
+        references public.users
+            on delete cascade
+        constraint fk_polls_user
+            references public.users
+            on delete cascade
+);
+
+alter table public.polls
+    owner to postgres;
+
+create index if not exists idx_polls_republic_id
+    on public.polls (republic_id);
+
+create index if not exists idx_polls_created_by
+    on public.polls (created_by);
+
+create table if not exists public.poll_options
+(
+    id          serial
+        primary key,
+    poll_id     integer      not null
+        constraint fk_poll_options_poll
+            references public.polls
+            on delete cascade,
+    option_text varchar(255) not null,
+    vote_count  integer default 0
+);
+
+alter table public.poll_options
+    owner to postgres;
+
+create index if not exists idx_poll_options_poll_id
+    on public.poll_options (poll_id);
+
+create table if not exists public.poll_votes
+(
+    user_id        uuid    not null
+        constraint fk_poll_votes_user
+            references public.users
+            on delete cascade,
+    poll_option_id integer not null
+        constraint fk_poll_votes_poll_option
+            references public.poll_options
+            on delete cascade,
+    primary key (user_id, poll_option_id)
+);
+
+alter table public.poll_votes
+    owner to postgres;
+
+create index if not exists idx_poll_votes_user_id
+    on public.poll_votes (user_id);
+
+create index if not exists idx_poll_votes_poll_option_id
+    on public.poll_votes (poll_option_id);
+
+create table if not exists public.activity_log
+(
+    id          serial
+        primary key,
+    user_id     uuid
+        constraint fk_activity_log_user
+            references public.users
+            on delete set null,
+    republic_id uuid
+        constraint fk_activity_log_republic
+            references public.republics
+            on delete set null,
+    action      varchar(255) not null,
+    details     text,
+    created_at  timestamp with time zone default CURRENT_TIMESTAMP
+);
+
+alter table public.activity_log
+    owner to postgres;
+
+create index if not exists idx_activity_log_user_id
+    on public.activity_log (user_id);
+

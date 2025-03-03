@@ -186,14 +186,8 @@ public class EventServiceImpl implements EventServicePort {
                 throw new ValidationException("User with id " + userId + " is not a member of the event's republic");
             }
 
-            // Criar convite
-            EventInvitation invitation = EventInvitation.builder()
-                    .user(user)
-                    .status(Event.InvitationStatus.INVITED)
-                    .build();
-
-            // Adicionar convite ao evento
-            event.addInvitation(invitation);
+            // Use the new repository method that handles the entity relationships
+            eventRepository.inviteUserToEvent(eventId, userId, Event.InvitationStatus.INVITED);
         }
 
         // Salvar evento com novos convites

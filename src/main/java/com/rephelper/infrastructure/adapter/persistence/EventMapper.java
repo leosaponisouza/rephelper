@@ -5,6 +5,7 @@ import com.rephelper.domain.model.EventInvitation;
 import com.rephelper.infrastructure.config.CommonMapperConfig;
 import com.rephelper.infrastructure.entity.EventInvitationJpaEntity;
 import com.rephelper.infrastructure.entity.EventJpaEntity;
+import com.rephelper.infrastructure.entity.UserJpaEntity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -102,32 +103,37 @@ public class EventMapper {
                 .startDate(domainEntity.getStartDate())
                 .endDate(domainEntity.getEndDate())
                 .location(domainEntity.getLocation())
+                .creator(userMapper.toJpaEntity(domainEntity.getCreator()))
+                .republic(republicMapper.toJpaEntity(domainEntity.getRepublic()))
                 .createdAt(domainEntity.getCreatedAt())
                 .build();
 
-        // Map republic if present
-        if (domainEntity.getRepublic() != null) {
-            entity.setRepublic(republicMapper.toJpaEntityWithoutUsers(domainEntity.getRepublic()));
-        }
-
-        // Map creator if present
-        if (domainEntity.getCreator() != null) {
-            entity.setCreator(userMapper.toJpaEntityWithoutRepublic(domainEntity.getCreator()));
-        }
-
-        // Map invitations if present
+        // Map invitations if present, but only use IDs
         if (domainEntity.getInvitations() != null && !domainEntity.getInvitations().isEmpty()) {
-            Set<EventInvitationJpaEntity> invitationEntities = domainEntity.getInvitations().stream()
-                    .map(invitation -> toJpaInvitation(invitation, entity))
-                    .collect(Collectors.toSet());
+            Set<EventInvitationJpaEntity> invitationEntities = new HashSet<>();
+
+            for (EventInvitation invitation : domainEntity.getInvitations()) {
+                // Create invitation with just the ID reference, not the full entity
+                EventInvitationJpaEntity invitationEntity = EventInvitationJpaEntity.builder()
+                        .event(entity)
+                        .build();
+
+                // Instead of mapping the full User entity, just set the ID
+                if (invitation.getUser() != null) {
+                    UserJpaEntity userReference = new UserJpaEntity();
+                    userReference.setUuid(invitation.getUser().getId());
+                    invitationEntity.setUser(userReference);
+                }
+
+                invitationEntity.setStatus(mapToJpaInvitationStatus(invitation.getStatus()));
+                invitationEntities.add(invitationEntity);
+            }
+
             entity.setInvitations(invitationEntities);
-        } else {
-            entity.setInvitations(new HashSet<>());
         }
 
         return entity;
     }
-
     private EventInvitation toDomainInvitation(EventInvitationJpaEntity jpaEntity) {
         if (jpaEntity == null) return null;
 

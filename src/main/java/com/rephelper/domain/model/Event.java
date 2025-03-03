@@ -34,7 +34,7 @@ public class Event {
      * Estado possível de um convite para evento
      */
     public enum InvitationStatus {
-        INVITED, CONFIRMED, DECLINED
+        INVITED, CONFIRMED, DECLINED, MAYBE
     }
 
     /**

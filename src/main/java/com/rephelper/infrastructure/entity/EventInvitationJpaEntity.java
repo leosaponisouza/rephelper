@@ -64,6 +64,6 @@ public class EventInvitationJpaEntity {
      * Status possíveis para um convite de evento
      */
     public enum EventInvitationStatus {
-        INVITED, CONFIRMED, DECLINED
+        INVITED, CONFIRMED, MAYBE, DECLINED
     }
 }

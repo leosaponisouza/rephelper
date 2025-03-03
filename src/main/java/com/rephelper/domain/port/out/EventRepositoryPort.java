@@ -50,4 +50,6 @@ public interface EventRepositoryPort {
      * Remove um evento
      */
     void delete(Event event);
+
+    Event inviteUserToEvent(Long eventId, UUID userId, Event.InvitationStatus status);
 }

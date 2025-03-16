@@ -1,3 +1,5 @@
+-- Criação de tabelas base e índices para gerenciamento de repúblicas
+
 create table if not exists public.republics
 (
     uuid         uuid                     default gen_random_uuid() not null
@@ -150,20 +152,38 @@ create table if not exists public.event_invitations
 alter table public.event_invitations
     owner to postgres;
 
+-- Criação do tipo enum para status de despesas
+DO $$
+    BEGIN
+        IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'expense_status') THEN
+            CREATE TYPE expense_status AS ENUM ('PENDING', 'APPROVED', 'REJECTED', 'REIMBURSED');
+        END IF;
+    END
+$$;
+
+-- Atualização da tabela expenses para o sistema de gerenciamento financeiro
 create table if not exists public.expenses
 (
-    id           serial
+    id                 serial
         primary key,
-    republic_id  uuid           not null
+    republic_id        uuid           not null
         constraint fk_expenses_republic
             references public.republics
             on delete cascade,
-    description  text           not null,
-    amount       numeric(10, 2) not null,
-    expense_date date           not null,
-    category     expense_category_type,
-    receipt_url  varchar(255),
-    created_at   timestamp with time zone default CURRENT_TIMESTAMP
+    creator_id         uuid
+        constraint fk_expenses_creator
+            references public.users
+            on delete cascade,
+    description        text           not null,
+    amount             numeric(10, 2) not null,
+    expense_date       date           not null,
+    category           varchar(100),
+    receipt_url        varchar(255),
+    status             expense_status default 'PENDING'::expense_status,
+    approval_date      timestamp with time zone,
+    reimbursement_date timestamp with time zone,
+    rejection_reason   text,
+    created_at         timestamp with time zone default CURRENT_TIMESTAMP
 );
 
 alter table public.expenses
@@ -172,6 +192,82 @@ alter table public.expenses
 create index if not exists idx_expenses_republic_id
     on public.expenses (republic_id);
 
+create index if not exists idx_expenses_creator_id
+    on public.expenses (creator_id);
+
+create index if not exists idx_expenses_status
+    on public.expenses (status);
+
+-- Nova tabela para gerenciar as finanças da república (saldo, etc)
+CREATE TABLE IF NOT EXISTS public.republic_finances
+(
+    id              serial PRIMARY KEY,
+    republic_id     uuid NOT NULL
+        constraint fk_republic_finances_republic
+            references public.republics
+            on delete cascade,
+    current_balance numeric(12, 2) NOT NULL DEFAULT 0,
+    last_updated    timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT uk_republic_finances_republic_id UNIQUE (republic_id)
+);
+
+alter table public.republic_finances
+    owner to postgres;
+
+create index if not exists idx_republic_finances_republic_id
+    on public.republic_finances (republic_id);
+
+-- Nova tabela para registrar receitas da república
+CREATE TABLE IF NOT EXISTS public.incomes
+(
+    id             serial PRIMARY KEY,
+    republic_id    uuid NOT NULL
+        constraint fk_incomes_republic
+            references public.republics
+            on delete cascade,
+    contributor_id uuid
+        constraint fk_incomes_contributor
+            references public.users
+            on delete set null,
+    description    text NOT NULL,
+    amount         numeric(10, 2) NOT NULL,
+    income_date    timestamp with time zone NOT NULL,
+    source         varchar(100) NOT NULL,  -- Contribuição, Evento, etc.
+    created_at     timestamp with time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+alter table public.incomes
+    owner to postgres;
+
+create index if not exists idx_incomes_republic_id
+    on public.incomes (republic_id);
+
+create index if not exists idx_incomes_contributor_id
+    on public.incomes (contributor_id);
+
+-- Nova tabela para planos de orçamento
+CREATE TABLE IF NOT EXISTS public.budget_plans
+(
+    id             serial PRIMARY KEY,
+    republic_id    uuid NOT NULL
+        constraint fk_budget_plans_republic
+            references public.republics
+            on delete cascade,
+    year           integer NOT NULL,
+    month          integer NOT NULL,
+    category       varchar(100) NOT NULL,
+    planned_amount numeric(10, 2) NOT NULL,
+    created_at     timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT uk_budget_plan_month UNIQUE (republic_id, year, month, category)
+);
+
+alter table public.budget_plans
+    owner to postgres;
+
+create index if not exists idx_budget_plans_republic_id
+    on public.budget_plans (republic_id);
+
+-- Tabela expense_splits (mantida caso precise ser usada no futuro)
 create table if not exists public.expense_splits
 (
     expense_id integer        not null
@@ -307,4 +403,3 @@ alter table public.activity_log
 
 create index if not exists idx_activity_log_user_id
     on public.activity_log (user_id);
-

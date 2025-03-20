@@ -21,4 +21,13 @@ public class UpdateTaskRequest {
     private String status;
 
     private String category;
+    
+    // Campos para recorrência
+    private Boolean isRecurring;
+    
+    private String recurrenceType; // DAILY, WEEKLY, MONTHLY, YEARLY
+    
+    private Integer recurrenceInterval;
+    
+    private LocalDateTime recurrenceEndDate;
 }

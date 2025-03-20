@@ -72,6 +72,21 @@ public class TaskJpaEntity {
     @LastModifiedDate
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
-
-
+    
+    // Campos para recorrência
+    @Column(name = "is_recurring")
+    private boolean isRecurring;
+    
+    @Enumerated(EnumType.STRING)
+    @Column(name = "recurrence_type")
+    private Task.RecurrenceType recurrenceType;
+    
+    @Column(name = "recurrence_interval")
+    private Integer recurrenceInterval;
+    
+    @Column(name = "recurrence_end_date")
+    private LocalDateTime recurrenceEndDate;
+    
+    @Column(name = "parent_task_id")
+    private Long parentTaskId;
 }

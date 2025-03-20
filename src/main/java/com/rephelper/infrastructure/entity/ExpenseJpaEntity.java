@@ -55,7 +55,7 @@ public class ExpenseJpaEntity {
     private String receiptUrl;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(name = "status")
     private Expense.ExpenseStatus status;
 
     @Column(name = "approval_date")

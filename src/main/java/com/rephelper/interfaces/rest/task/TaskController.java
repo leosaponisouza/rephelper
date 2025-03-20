@@ -3,6 +3,9 @@ package com.rephelper.interfaces.rest.task;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -18,8 +21,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.rephelper.application.dto.request.CreateTaskRequest;
 import com.rephelper.application.dto.request.TaskAssignmentRequest;
+import com.rephelper.application.dto.request.TaskFilterRequest;
 import com.rephelper.application.dto.request.UpdateTaskRequest;
 import com.rephelper.application.dto.response.ApiResponse;
+import com.rephelper.application.dto.response.PagedResponse;
 import com.rephelper.application.dto.response.TaskResponse;
 import com.rephelper.application.mapper.TaskDtoMapper;
 import com.rephelper.domain.exception.ValidationException;
@@ -66,25 +71,53 @@ public class TaskController {
             @AuthenticationPrincipal CustomUserDetails currentUser) {
 
         // Get user to determine their republic
-        User user = userService.getUserById(currentUser.getUserId());
-
-        if (user.getCurrentRepublic() == null) {
-            throw new ValidationException("User is not associated with any republic");
-        }
-
-        // If republicId is provided, validate that it matches user's republic (unless admin)
-        UUID targetRepublicId = republicId;
-        if (targetRepublicId == null) {
-            targetRepublicId = user.getCurrentRepublic().getId();
-        } else if (!targetRepublicId.equals(user.getCurrentRepublic().getId()) &&
-                !currentUser.getRole().equals("admin")) {
-            throw new ValidationException("You can only view tasks for your own republic");
-        }
+        UUID targetRepublicId = getUuid(republicId, currentUser);
 
         // Get tasks
         List<Task> tasks = taskService.getAllTasksByRepublicId(targetRepublicId);
 
         return ResponseEntity.ok(taskDtoMapper.toTaskResponseList(tasks));
+    }
+    
+    @PostMapping("/filter")
+    @Operation(summary = "Filter tasks", description = "Retrieves tasks with filtering, pagination and sorting")
+    public ResponseEntity<PagedResponse<TaskResponse>> filterTasks(
+            @RequestBody(required = false) TaskFilterRequest filter,
+            @RequestParam(required = false) UUID republicId,
+            @PageableDefault(size = 20, sort = "dueDate") Pageable pageable,
+            @AuthenticationPrincipal CustomUserDetails currentUser) {
+
+        // Get user to determine their republic
+        UUID targetRepublicId = getUuid(republicId, currentUser);
+
+        // Initialize filter if null
+        TaskFilterRequest taskFilter = filter != null ? filter : new TaskFilterRequest();
+        
+        // Garantir que os parâmetros de ordenação sejam definidos se não estiverem presentes no filtro
+        if (taskFilter.getSortBy() == null || taskFilter.getSortBy().isEmpty()) {
+            // Se não há ordenação definida no filtro, usar o padrão "dueDate"
+            taskFilter.setSortBy("dueDate");
+        }
+        
+        if (taskFilter.getSortDirection() == null || taskFilter.getSortDirection().isEmpty()) {
+            // Se não há direção definida no filtro, usar o padrão "ASC"
+            taskFilter.setSortDirection("ASC");
+        }
+        
+        // Get filtered tasks
+        Page<Task> taskPage = taskService.findTasksWithFilters(targetRepublicId, taskFilter, pageable);
+        
+        // Convert to response
+        Page<TaskResponse> responsePage = taskPage.map(taskDtoMapper::toTaskResponse);
+        
+        return ResponseEntity.ok(new PagedResponse<>(
+                responsePage.getContent(),
+                responsePage.getNumber(),
+                responsePage.getSize(),
+                responsePage.getTotalElements(),
+                responsePage.getTotalPages(),
+                responsePage.isLast()
+        ));
     }
 
     @GetMapping("/{id}")
@@ -106,20 +139,7 @@ public class TaskController {
             @AuthenticationPrincipal CustomUserDetails currentUser) {
 
         // Get user to determine their republic
-        User user = userService.getUserById(currentUser.getUserId());
-
-        if (user.getCurrentRepublic() == null) {
-            throw new ValidationException("User is not associated with any republic");
-        }
-
-        // If republicId is provided, validate that it matches user's republic (unless admin)
-        UUID targetRepublicId = republicId;
-        if (targetRepublicId == null) {
-            targetRepublicId = user.getCurrentRepublic().getId();
-        } else if (!targetRepublicId.equals(user.getCurrentRepublic().getId()) &&
-                !currentUser.getRole().equals("admin")) {
-            throw new ValidationException("You can only view tasks for your own republic");
-        }
+        UUID targetRepublicId = getUuid(republicId, currentUser);
 
         // Get tasks by category
         List<Task> tasks = taskService.getTasksByCategory(targetRepublicId, category);
@@ -135,26 +155,15 @@ public class TaskController {
             @AuthenticationPrincipal CustomUserDetails currentUser) {
 
         // Get user to determine their republic
-        User user = userService.getUserById(currentUser.getUserId());
-
-        if (user.getCurrentRepublic() == null) {
-            throw new ValidationException("User is not associated with any republic");
-        }
-
-        // If republicId is provided, validate that it matches user's republic (unless admin)
-        UUID targetRepublicId = republicId;
-        if (targetRepublicId == null) {
-            targetRepublicId = user.getCurrentRepublic().getId();
-        } else if (!targetRepublicId.equals(user.getCurrentRepublic().getId()) &&
-                !currentUser.getRole().equals("admin")) {
-            throw new ValidationException("You can only view tasks for your own republic");
-        }
+        UUID targetRepublicId = getUuid(republicId, currentUser);
 
         // Get tasks by status
         List<Task> tasks = taskService.getTasksByStatus(targetRepublicId, status);
 
         return ResponseEntity.ok(taskDtoMapper.toTaskResponseList(tasks));
     }
+
+
 
     @PutMapping("/{id}")
     @Operation(summary = "Update task", description = "Updates task details")
@@ -246,5 +255,59 @@ public class TaskController {
         List<Task> tasks = taskService.getTasksAssignedToUser(currentUser.getUserId());
 
         return ResponseEntity.ok(taskDtoMapper.toTaskResponseList(tasks));
+    }
+    
+    @PostMapping("/assigned/filter")
+    @Operation(summary = "Filter assigned tasks", description = "Retrieves tasks assigned to the current user with filtering, pagination and sorting")
+    public ResponseEntity<PagedResponse<TaskResponse>> filterAssignedTasks(
+            @RequestBody(required = false) TaskFilterRequest filter,
+            @PageableDefault(size = 20, sort = "dueDate") Pageable pageable,
+            @AuthenticationPrincipal CustomUserDetails currentUser) {
+
+        // Initialize filter if null
+        TaskFilterRequest taskFilter = filter != null ? filter : new TaskFilterRequest();
+        
+        // Garantir que os parâmetros de ordenação sejam definidos se não estiverem presentes no filtro
+        if (taskFilter.getSortBy() == null || taskFilter.getSortBy().isEmpty()) {
+            // Se não há ordenação definida no filtro, usar o padrão "dueDate"
+            taskFilter.setSortBy("dueDate");
+        }
+        
+        if (taskFilter.getSortDirection() == null || taskFilter.getSortDirection().isEmpty()) {
+            // Se não há direção definida no filtro, usar o padrão "ASC"
+            taskFilter.setSortDirection("ASC");
+        }
+        
+        // Get filtered tasks assigned to user
+        Page<Task> taskPage = taskService.findTasksAssignedWithFilters(currentUser.getUserId(), taskFilter, pageable);
+        
+        // Convert to response
+        Page<TaskResponse> responsePage = taskPage.map(taskDtoMapper::toTaskResponse);
+        
+        return ResponseEntity.ok(new PagedResponse<>(
+                responsePage.getContent(),
+                responsePage.getNumber(),
+                responsePage.getSize(),
+                responsePage.getTotalElements(),
+                responsePage.getTotalPages(),
+                responsePage.isLast()
+        ));
+    }
+    private UUID getUuid(UUID republicId, CustomUserDetails currentUser) {
+        User user = userService.getUserById(currentUser.getUserId());
+
+        if (user.getCurrentRepublic() == null) {
+            throw new ValidationException("User is not associated with any republic");
+        }
+
+        // If republicId is provided, validate that it matches user's republic (unless admin)
+        UUID targetRepublicId = republicId;
+        if (targetRepublicId == null) {
+            targetRepublicId = user.getCurrentRepublic().getId();
+        } else if (!targetRepublicId.equals(user.getCurrentRepublic().getId()) &&
+                !currentUser.getRole().equals("admin")) {
+            throw new ValidationException("You can only view tasks for your own republic");
+        }
+        return targetRepublicId;
     }
 }

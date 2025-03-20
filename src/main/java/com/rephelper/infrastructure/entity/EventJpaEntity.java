@@ -64,7 +64,7 @@ public class EventJpaEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by", nullable = false)
-    private UserJpaEntity creator;
+    private UserJpaEntity createdBy;
 
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default

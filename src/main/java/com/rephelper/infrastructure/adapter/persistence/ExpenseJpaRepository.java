@@ -26,12 +26,27 @@ public interface ExpenseJpaRepository extends JpaRepository<ExpenseJpaEntity, Lo
     List<ExpenseJpaEntity> findByRepublicUuidAndStatus(UUID republicId, Expense.ExpenseStatus status);
 
     @Query("SELECT e FROM ExpenseJpaEntity e WHERE e.republic.uuid = :republicId AND " +
-            "(:startDate IS NULL OR e.expenseDate >= :startDate) AND " +
-            "(:endDate IS NULL OR e.expenseDate <= :endDate)")
-    List<ExpenseJpaEntity> findByRepublicIdAndDateRange(
+            "e.expenseDate >= :startDate AND e.expenseDate <= :endDate")
+    List<ExpenseJpaEntity> findByRepublicIdAndDateRangeBoth(
             @Param("republicId") UUID republicId,
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate);
+
+    @Query("SELECT e FROM ExpenseJpaEntity e WHERE e.republic.uuid = :republicId AND " +
+            "e.expenseDate >= :startDate")
+    List<ExpenseJpaEntity> findByRepublicIdAndStartDate(
+            @Param("republicId") UUID republicId,
+            @Param("startDate") LocalDate startDate);
+
+    @Query("SELECT e FROM ExpenseJpaEntity e WHERE e.republic.uuid = :republicId AND " +
+            "e.expenseDate <= :endDate")
+    List<ExpenseJpaEntity> findByRepublicIdAndEndDate(
+            @Param("republicId") UUID republicId,
+            @Param("endDate") LocalDate endDate);
+
+    @Query("SELECT e FROM ExpenseJpaEntity e WHERE e.republic.uuid = :republicId")
+    List<ExpenseJpaEntity> findByRepublicIdOnly(
+            @Param("republicId") UUID republicId);
 
     List<ExpenseJpaEntity> findByRepublicUuidAndCategory(UUID republicId, String category);
 }

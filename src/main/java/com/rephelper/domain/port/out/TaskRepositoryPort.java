@@ -4,6 +4,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
+import com.rephelper.application.dto.request.TaskFilterRequest;
 import com.rephelper.domain.model.Task;
 
 /**
@@ -55,4 +59,24 @@ public interface TaskRepositoryPort {
      * Remove uma tarefa
      */
     void delete(Task task);
+    
+    /**
+     * Busca tarefas com filtros e paginação
+     * 
+     * @param republicId ID da república
+     * @param filter Filtros a serem aplicados
+     * @param pageable Informações de paginação
+     * @return Página de tarefas
+     */
+    Page<Task> findWithFilters(UUID republicId, TaskFilterRequest filter, Pageable pageable);
+    
+    /**
+     * Busca tarefas atribuídas a um usuário com filtros e paginação
+     * 
+     * @param userId ID do usuário
+     * @param filter Filtros a serem aplicados
+     * @param pageable Informações de paginação
+     * @return Página de tarefas
+     */
+    Page<Task> findAssignedWithFilters(UUID userId, TaskFilterRequest filter, Pageable pageable);
 }

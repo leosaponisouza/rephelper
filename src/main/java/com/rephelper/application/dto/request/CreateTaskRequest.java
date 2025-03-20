@@ -26,4 +26,13 @@ public class CreateTaskRequest {
 
     @NotNull(message = "Republic ID is required")
     private UUID republicId;
+    
+    // Campos para recorrência
+    private Boolean isRecurring;
+    
+    private String recurrenceType; // DAILY, WEEKLY, MONTHLY, YEARLY
+    
+    private Integer recurrenceInterval;
+    
+    private LocalDateTime recurrenceEndDate;
 }

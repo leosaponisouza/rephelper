@@ -70,7 +70,7 @@ public class ExpenseDtoMapper {
                 .republicId(expense.getRepublic() != null ? expense.getRepublic().getId() : null)
                 .republicName(expense.getRepublic() != null ? expense.getRepublic().getName() : null)
                 .creatorId(expense.getCreator() != null ? expense.getCreator().getId() : null)
-                .creatorName(expense.getCreator() != null ? expense.getCreator().getName() : null)
+                .creatorName(expense.getCreator() != null ? ( expense.getCreator().getNickname() != null ? expense.getCreator().getNickname() : expense.getCreator().getName()) : null)
                 .creatorProfilePictureUrl(expense.getCreator() != null ? expense.getCreator().getProfilePictureUrl() : null)
                 .createdAt(expense.getCreatedAt())
                 .build();

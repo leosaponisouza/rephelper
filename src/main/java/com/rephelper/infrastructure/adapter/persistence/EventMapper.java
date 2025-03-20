@@ -56,7 +56,7 @@ public class EventMapper {
         }
 
         // Map creator if present
-        if (jpaEntity.getCreator() != null) {
+        if (jpaEntity.getCreatedBy() != null) {
             event = Event.builder()
                     .id(event.getId())
                     .title(event.getTitle())
@@ -65,7 +65,7 @@ public class EventMapper {
                     .endDate(event.getEndDate())
                     .location(event.getLocation())
                     .republic(event.getRepublic())
-                    .creator(userMapper.toDomainEntityWithoutRepublic(jpaEntity.getCreator()))
+                    .creator(userMapper.toDomainEntityWithoutRepublic(jpaEntity.getCreatedBy()))
                     .createdAt(event.getCreatedAt())
                     .build();
         }
@@ -103,7 +103,7 @@ public class EventMapper {
                 .startDate(domainEntity.getStartDate())
                 .endDate(domainEntity.getEndDate())
                 .location(domainEntity.getLocation())
-                .creator(userMapper.toJpaEntity(domainEntity.getCreator()))
+                .createdBy(userMapper.toJpaEntity(domainEntity.getCreator()))
                 .republic(republicMapper.toJpaEntity(domainEntity.getRepublic()))
                 .createdAt(domainEntity.getCreatedAt())
                 .build();

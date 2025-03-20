@@ -58,7 +58,23 @@ public class IncomeJpaAdapter implements IncomeRepositoryPort {
 
     @Override
     public List<Income> findByRepublicIdAndDateRange(UUID republicId, LocalDateTime startDate, LocalDateTime endDate) {
-        return incomeJpaRepository.findByRepublicIdAndDateRange(republicId, startDate, endDate).stream()
+        List<IncomeJpaEntity> entities;
+
+        if (startDate == null && endDate == null) {
+            // Se ambas as datas são nulas, simplesmente busque por republicId
+            entities = incomeJpaRepository.findByRepublicUuid(republicId);
+        } else if (startDate == null) {
+            // Se apenas startDate é nula
+            entities = incomeJpaRepository.findByRepublicIdAndEndDate(republicId, endDate);
+        } else if (endDate == null) {
+            // Se apenas endDate é nula
+            entities = incomeJpaRepository.findByRepublicIdAndStartDate(republicId, startDate);
+        } else {
+            // Se ambas as datas são fornecidas
+            entities = incomeJpaRepository.findByRepublicIdAndStartDateAndEndDate(republicId, startDate, endDate);
+        }
+
+        return entities.stream()
                 .map(incomeMapper::toDomainEntity)
                 .collect(Collectors.toList());
     }

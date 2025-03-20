@@ -62,7 +62,7 @@ public class IncomeDtoMapper {
                 .republicId(income.getRepublic() != null ? income.getRepublic().getId() : null)
                 .republicName(income.getRepublic() != null ? income.getRepublic().getName() : null)
                 .contributorId(income.getContributor() != null ? income.getContributor().getId() : null)
-                .contributorName(income.getContributor() != null ? income.getContributor().getName() : null)
+                .contributorName(income.getContributor() != null ? ( income.getContributor().getNickname() != null ? income.getContributor().getNickname() : income.getContributor().getName()) : null)
                 .contributorProfilePictureUrl(income.getContributor() != null ? income.getContributor().getProfilePictureUrl() : null)
                 .createdAt(income.getCreatedAt())
                 .build();

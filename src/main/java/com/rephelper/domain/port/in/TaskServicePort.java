@@ -1,9 +1,12 @@
 package com.rephelper.domain.port.in;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
+import com.rephelper.application.dto.request.TaskFilterRequest;
 import com.rephelper.application.dto.request.UpdateTaskRequest;
 import com.rephelper.domain.model.Task;
 
@@ -65,7 +68,6 @@ public interface TaskServicePort {
     /**
      * Remove a atribuição de uma tarefa a um usuário
      */
-
     Task unassignTaskFromUser(Long taskId, UUID userId, UUID unassignerUserId);
 
     /**
@@ -77,4 +79,24 @@ public interface TaskServicePort {
      * Obtém tarefas atribuídas a um usuário em uma república
      */
     List<Task> getTasksAssignedToUserInRepublic(UUID userId, UUID republicId);
+    
+    /**
+     * Busca tarefas com filtros e paginação
+     * 
+     * @param republicId ID da república
+     * @param filter Filtros a serem aplicados
+     * @param pageable Informações de paginação
+     * @return Página de tarefas
+     */
+    Page<Task> findTasksWithFilters(UUID republicId, TaskFilterRequest filter, Pageable pageable);
+    
+    /**
+     * Busca tarefas atribuídas a um usuário com filtros e paginação
+     * 
+     * @param userId ID do usuário
+     * @param filter Filtros a serem aplicados
+     * @param pageable Informações de paginação
+     * @return Página de tarefas
+     */
+    Page<Task> findTasksAssignedWithFilters(UUID userId, TaskFilterRequest filter, Pageable pageable);
 }

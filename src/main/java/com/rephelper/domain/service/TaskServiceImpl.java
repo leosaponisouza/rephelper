@@ -3,7 +3,10 @@ package com.rephelper.domain.service;
 import java.util.List;
 import java.util.UUID;
 
+import com.rephelper.application.dto.request.TaskFilterRequest;
 import com.rephelper.application.dto.request.UpdateTaskRequest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -45,6 +48,21 @@ public class TaskServiceImpl implements TaskServicePort {
             throw new ResourceNotFoundException("Republic not found with id: " + task.getRepublic().getId());
         }
 
+        // Validar dados de recorrência
+        if (task.isRecurring()) {
+            if (task.getRecurrenceType() == null) {
+                throw new ValidationException("Recurrence type is required for recurring tasks");
+            }
+            
+            if (task.getRecurrenceInterval() == null || task.getRecurrenceInterval() <= 0) {
+                throw new ValidationException("Recurrence interval must be a positive number");
+            }
+            
+            if (task.getDueDate() == null) {
+                throw new ValidationException("Due date is required for recurring tasks");
+            }
+        }
+
         // Atualizar status baseado na data de vencimento
         task.updateStatus();
 
@@ -59,7 +77,12 @@ public class TaskServiceImpl implements TaskServicePort {
             throw new ResourceNotFoundException("Republic not found with id: " + republicId);
         }
 
-        return taskRepository.findByRepublicId(republicId);
+        // Use findWithFilters with default sorting to ensure ordering is applied
+        TaskFilterRequest filter = new TaskFilterRequest();
+        filter.setSortBy("dueDate");
+        filter.setSortDirection("ASC");
+        
+        return taskRepository.findWithFilters(republicId, filter, null).getContent();
     }
 
     @Override
@@ -81,7 +104,13 @@ public class TaskServiceImpl implements TaskServicePort {
             throw new ValidationException("Category cannot be empty");
         }
 
-        return taskRepository.findByRepublicIdAndCategory(republicId, category);
+        // Use findWithFilters with category filter and default sorting
+        TaskFilterRequest filter = new TaskFilterRequest();
+        filter.setCategory(category);
+        filter.setSortBy("dueDate");
+        filter.setSortDirection("ASC");
+        
+        return taskRepository.findWithFilters(republicId, filter, null).getContent();
     }
 
     @Override
@@ -96,7 +125,13 @@ public class TaskServiceImpl implements TaskServicePort {
             throw new ValidationException("Status cannot be null");
         }
 
-        return taskRepository.findByRepublicIdAndStatus(republicId, status);
+        // Use findWithFilters with status filter and default sorting
+        TaskFilterRequest filter = new TaskFilterRequest();
+        filter.setStatus(status.name());
+        filter.setSortBy("dueDate");
+        filter.setSortDirection("ASC");
+        
+        return taskRepository.findWithFilters(republicId, filter, null).getContent();
     }
 
     @Override
@@ -111,8 +146,24 @@ public class TaskServiceImpl implements TaskServicePort {
         boolean isMember = user.getCurrentRepublic() != null &&
                 user.getCurrentRepublic().getId().equals(task.getRepublic().getId());
 
-        if ( !isMember) {
+        if (!isMember) {
             throw new ForbiddenException("You do not have permission to update this task");
+        }
+
+        // Validar dados de recorrência
+        if (request.getIsRecurring() != null && request.getIsRecurring()) {
+            if (request.getRecurrenceType() == null && task.getRecurrenceType() == null) {
+                throw new ValidationException("Recurrence type is required for recurring tasks");
+            }
+            
+            if ((request.getRecurrenceInterval() == null || request.getRecurrenceInterval() <= 0) && 
+                (task.getRecurrenceInterval() == null || task.getRecurrenceInterval() <= 0)) {
+                throw new ValidationException("Recurrence interval must be a positive number");
+            }
+            
+            if (request.getDueDate() == null && task.getDueDate() == null) {
+                throw new ValidationException("Due date is required for recurring tasks");
+            }
         }
 
         // Atualizar tarefa
@@ -131,14 +182,25 @@ public class TaskServiceImpl implements TaskServicePort {
         boolean isMember = user.getCurrentRepublic() != null &&
                 user.getCurrentRepublic().getId().equals(task.getRepublic().getId());
 
-        if ( !isMember) {
+        if (!isMember) {
             throw new ForbiddenException("You do not have permission to complete this task");
         }
 
         // Completar tarefa
         task.complete();
+        
+        // Salvar a tarefa atualizada
+        Task completedTask = taskRepository.save(task);
+        
+        // Se a tarefa for recorrente, criar a próxima instância
+        if (task.isRecurring() && task.shouldContinueRecurrence()) {
+            Task nextTask = task.createRecurringInstance();
+            if (nextTask != null) {
+                taskRepository.save(nextTask);
+            }
+        }
 
-        return taskRepository.save(task);
+        return completedTask;
     }
 
     @Override
@@ -174,7 +236,7 @@ public class TaskServiceImpl implements TaskServicePort {
         boolean isMember = user.getCurrentRepublic() != null &&
                 user.getCurrentRepublic().getId().equals(task.getRepublic().getId());
 
-        if ( !isMember) {
+        if (!isMember) {
             throw new ForbiddenException("You do not have permission to delete this task");
         }
 
@@ -198,7 +260,7 @@ public class TaskServiceImpl implements TaskServicePort {
         boolean isAssignerMember = assigner.getCurrentRepublic() != null &&
                 assigner.getCurrentRepublic().getId().equals(task.getRepublic().getId());
 
-        if ( !isAssignerMember) {
+        if (!isAssignerMember) {
             throw new ForbiddenException("You do not have permission to assign tasks in this republic");
         }
 
@@ -232,7 +294,7 @@ public class TaskServiceImpl implements TaskServicePort {
         boolean isUnassignerMember = unassigner.getCurrentRepublic() != null &&
                 unassigner.getCurrentRepublic().getId().equals(task.getRepublic().getId());
 
-        if ( !isUnassignerMember) {
+        if (!isUnassignerMember) {
             throw new ForbiddenException("You do not have permission to unassign tasks in this republic");
         }
 
@@ -255,7 +317,12 @@ public class TaskServiceImpl implements TaskServicePort {
             throw new ResourceNotFoundException("User not found with id: " + userId);
         }
 
-        return taskRepository.findByAssignedUserId(userId);
+        // Use findAssignedWithFilters with default sorting
+        TaskFilterRequest filter = new TaskFilterRequest();
+        filter.setSortBy("dueDate");
+        filter.setSortDirection("ASC");
+        
+        return taskRepository.findAssignedWithFilters(userId, filter, null).getContent();
     }
 
     @Override
@@ -271,6 +338,36 @@ public class TaskServiceImpl implements TaskServicePort {
             throw new ResourceNotFoundException("Republic not found with id: " + republicId);
         }
 
-        return taskRepository.findByAssignedUserIdAndRepublicId(userId, republicId);
+        // Use findAssignedWithFilters with republic filter and default sorting
+        TaskFilterRequest filter = new TaskFilterRequest();
+        filter.setSortBy("dueDate");
+        filter.setSortDirection("ASC");
+        filter.setAssignedUserId(userId);
+        
+        // Since findAssignedWithFilters doesn't have a republic filter parameter,
+        // we need to use findWithFilters with both user and republic filters
+        return taskRepository.findWithFilters(republicId, filter, null).getContent();
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public Page<Task> findTasksWithFilters(UUID republicId, TaskFilterRequest filter, Pageable pageable) {
+        // Verificar se a república existe
+        if (!republicRepository.findById(republicId).isPresent()) {
+            throw new ResourceNotFoundException("Republic not found with id: " + republicId);
+        }
+        
+        return taskRepository.findWithFilters(republicId, filter, pageable);
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public Page<Task> findTasksAssignedWithFilters(UUID userId, TaskFilterRequest filter, Pageable pageable) {
+        // Validar usuário
+        if (!userRepository.findById(userId).isPresent()) {
+            throw new ResourceNotFoundException("User not found with id: " + userId);
+        }
+        
+        return taskRepository.findAssignedWithFilters(userId, filter, pageable);
     }
 }

@@ -32,12 +32,27 @@ public class Task {
     private String category;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    
+    // Campos para recorrência
+    @Builder.Default
+    private boolean isRecurring = false;
+    private RecurrenceType recurrenceType;
+    private Integer recurrenceInterval; // Intervalo de recorrência (ex: a cada 2 semanas)
+    private LocalDateTime recurrenceEndDate; // Data final da recorrência (opcional)
+    private Long parentTaskId; // ID da tarefa pai (para tarefas geradas por recorrência)
 
     /**
      * Status possíveis para uma tarefa
      */
     public enum TaskStatus {
         PENDING, IN_PROGRESS, COMPLETED, OVERDUE, CANCELLED
+    }
+    
+    /**
+     * Tipos de recorrência possíveis
+     */
+    public enum RecurrenceType {
+        DAILY, WEEKLY, MONTHLY, YEARLY
     }
 
     /**
@@ -86,35 +101,53 @@ public class Task {
      * Atualiza informações da tarefa
      */
     public void update(UpdateTaskRequest request) {
-        if (title != null && !title.isBlank()) {
+        if (request.getTitle() != null && !request.getTitle().isBlank()) {
             this.title = request.getTitle();
         }
 
-        if (description != null) {
+        if (request.getDescription() != null) {
             this.description = request.getDescription();
         }
 
-        if (dueDate != null) {
+        if (request.getDueDate() != null) {
             this.dueDate = request.getDueDate();
         }
 
-        if (category != null) {
+        if (request.getCategory() != null) {
             this.category = request.getCategory();
         }
+        
         if (request.getStatus() != null &&
                 request.getStatus().equals(TaskStatus.IN_PROGRESS.toString())) {
             startProgress();
         }
+        
         if (request.getStatus() != null &&
                 request.getStatus().equals(TaskStatus.PENDING.toString())) {
             this.status = TaskStatus.PENDING;
+        }
+        
+        // Atualiza informações de recorrência
+        if (request.getIsRecurring() != null) {
+            this.isRecurring = request.getIsRecurring();
+        }
+        
+        if (request.getRecurrenceType() != null) {
+            this.recurrenceType = RecurrenceType.valueOf(request.getRecurrenceType());
+        }
+        
+        if (request.getRecurrenceInterval() != null) {
+            this.recurrenceInterval = request.getRecurrenceInterval();
+        }
+        
+        if (request.getRecurrenceEndDate() != null) {
+            this.recurrenceEndDate = request.getRecurrenceEndDate();
         }
 
         this.updatedAt = LocalDateTime.now();
 
         // Atualiza o status com base na nova data de vencimento
         updateStatus();
-
     }
 
     /**
@@ -144,5 +177,88 @@ public class Task {
         return user != null &&
                 this.assignedUsers.stream()
                         .anyMatch(u -> u.getId().equals(user.getId()));
+    }
+    
+    /**
+     * Calcula a próxima data de vencimento com base na recorrência
+     */
+    public LocalDateTime calculateNextDueDate() {
+        if (!isRecurring || dueDate == null || recurrenceType == null || recurrenceInterval == null) {
+            return null;
+        }
+        
+        LocalDateTime nextDueDate = null;
+        
+        switch (recurrenceType) {
+            case DAILY:
+                nextDueDate = dueDate.plusDays(recurrenceInterval);
+                break;
+            case WEEKLY:
+                nextDueDate = dueDate.plusWeeks(recurrenceInterval);
+                break;
+            case MONTHLY:
+                nextDueDate = dueDate.plusMonths(recurrenceInterval);
+                break;
+            case YEARLY:
+                nextDueDate = dueDate.plusYears(recurrenceInterval);
+                break;
+        }
+        
+        return nextDueDate;
+    }
+    
+    /**
+     * Verifica se a recorrência deve continuar
+     */
+    public boolean shouldContinueRecurrence() {
+        if (!isRecurring) {
+            return false;
+        }
+        
+        LocalDateTime nextDueDate = calculateNextDueDate();
+        
+        // Se não há próxima data, não continua
+        if (nextDueDate == null) {
+            return false;
+        }
+        
+        // Se há data final de recorrência e a próxima data é depois, não continua
+        if (recurrenceEndDate != null && nextDueDate.isAfter(recurrenceEndDate)) {
+            return false;
+        }
+        
+        return true;
+    }
+    
+    /**
+     * Cria uma nova instância de tarefa baseada nesta, para recorrência
+     */
+    public Task createRecurringInstance() {
+        if (!shouldContinueRecurrence()) {
+            return null;
+        }
+        
+        LocalDateTime nextDueDate = calculateNextDueDate();
+        
+        Task newTask = Task.builder()
+                .title(this.title)
+                .description(this.description)
+                .republic(this.republic)
+                .status(TaskStatus.PENDING)
+                .dueDate(nextDueDate)
+                .category(this.category)
+                .isRecurring(this.isRecurring)
+                .recurrenceType(this.recurrenceType)
+                .recurrenceInterval(this.recurrenceInterval)
+                .recurrenceEndDate(this.recurrenceEndDate)
+                .parentTaskId(this.id)
+                .build();
+        
+        // Copia os usuários atribuídos
+        for (User user : this.assignedUsers) {
+            newTask.assignTo(user);
+        }
+        
+        return newTask;
     }
 }

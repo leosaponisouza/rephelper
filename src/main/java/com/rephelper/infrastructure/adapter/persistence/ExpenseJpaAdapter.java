@@ -69,14 +69,28 @@ public class ExpenseJpaAdapter implements ExpenseRepositoryPort {
                 .map(expenseMapper::toDomainEntity)
                 .collect(Collectors.toList());
     }
-
     @Override
     public List<Expense> findByRepublicIdAndDateRange(UUID republicId, LocalDate startDate, LocalDate endDate) {
-        return expenseJpaRepository.findByRepublicIdAndDateRange(republicId, startDate, endDate).stream()
+        List<ExpenseJpaEntity> expenses;
+
+        if (startDate != null && endDate != null) {
+            // Both dates provided
+            expenses = expenseJpaRepository.findByRepublicIdAndDateRangeBoth(republicId, startDate, endDate);
+        } else if (startDate != null) {
+            // Only start date provided
+            expenses = expenseJpaRepository.findByRepublicIdAndStartDate(republicId, startDate);
+        } else if (endDate != null) {
+            // Only end date provided
+            expenses = expenseJpaRepository.findByRepublicIdAndEndDate(republicId, endDate);
+        } else {
+            // No dates provided
+            expenses = expenseJpaRepository.findByRepublicIdOnly(republicId);
+        }
+
+        return expenses.stream()
                 .map(expenseMapper::toDomainEntity)
                 .collect(Collectors.toList());
     }
-
     @Override
     public List<Expense> findByRepublicIdAndCategory(UUID republicId, String category) {
         return expenseJpaRepository.findByRepublicUuidAndCategory(republicId, category).stream()

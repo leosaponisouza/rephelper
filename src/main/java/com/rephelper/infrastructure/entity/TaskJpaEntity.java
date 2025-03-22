@@ -4,7 +4,6 @@ import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.rephelper.domain.model.Task;
 import jakarta.persistence.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -55,7 +54,7 @@ public class TaskJpaEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Task.TaskStatus status;
+    private TaskStatusJpa status;  // Alterado para usar TaskStatusJpa
 
     @Column(name = "due_date")
     private LocalDateTime dueDate;
@@ -72,21 +71,46 @@ public class TaskJpaEntity {
     @LastModifiedDate
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
-    
+
     // Campos para recorrência
     @Column(name = "is_recurring")
     private boolean isRecurring;
-    
+
     @Enumerated(EnumType.STRING)
     @Column(name = "recurrence_type")
-    private Task.RecurrenceType recurrenceType;
-    
+    private RecurrenceTypeJpa recurrenceType;  // Alterado para usar RecurrenceTypeJpa
+
     @Column(name = "recurrence_interval")
     private Integer recurrenceInterval;
-    
+
     @Column(name = "recurrence_end_date")
     private LocalDateTime recurrenceEndDate;
-    
+
     @Column(name = "parent_task_id")
     private Long parentTaskId;
+
+    /**
+     * Status possíveis para uma tarefa na camada de persistência
+     */
+    public enum TaskStatusJpa {
+        PENDING, IN_PROGRESS, COMPLETED, OVERDUE, CANCELLED
+    }
+
+    /**
+     * Tipos de recorrência possíveis na camada de persistência
+     */
+    public enum RecurrenceTypeJpa {
+        DAILY, WEEKLY, MONTHLY, YEARLY
+    }
+
+    @PrePersist
+    public void prePersist() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    public void preUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 }

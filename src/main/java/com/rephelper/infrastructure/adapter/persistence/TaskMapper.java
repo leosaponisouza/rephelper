@@ -34,6 +34,12 @@ public class TaskMapper {
                 .category(jpaEntity.getCategory())
                 .createdAt(jpaEntity.getCreatedAt())
                 .updatedAt(jpaEntity.getUpdatedAt())
+                // Campos de recorrência
+                .isRecurring(jpaEntity.isRecurring())
+                .recurrenceType(mapToDomainRecurrenceType(jpaEntity.getRecurrenceType()))
+                .recurrenceInterval(jpaEntity.getRecurrenceInterval())
+                .recurrenceEndDate(jpaEntity.getRecurrenceEndDate())
+                .parentTaskId(jpaEntity.getParentTaskId())
                 .build();
 
         // Map republic if present
@@ -49,6 +55,12 @@ public class TaskMapper {
                     .category(task.getCategory())
                     .createdAt(task.getCreatedAt())
                     .updatedAt(task.getUpdatedAt())
+                    // Mantém os campos de recorrência
+                    .isRecurring(task.isRecurring())
+                    .recurrenceType(task.getRecurrenceType())
+                    .recurrenceInterval(task.getRecurrenceInterval())
+                    .recurrenceEndDate(task.getRecurrenceEndDate())
+                    .parentTaskId(task.getParentTaskId())
                     .build();
         }
 
@@ -68,6 +80,12 @@ public class TaskMapper {
                     .category(task.getCategory())
                     .createdAt(task.getCreatedAt())
                     .updatedAt(task.getUpdatedAt())
+                    // Mantém os campos de recorrência
+                    .isRecurring(task.isRecurring())
+                    .recurrenceType(task.getRecurrenceType())
+                    .recurrenceInterval(task.getRecurrenceInterval())
+                    .recurrenceEndDate(task.getRecurrenceEndDate())
+                    .parentTaskId(task.getParentTaskId())
                     .build();
         }
 
@@ -87,6 +105,12 @@ public class TaskMapper {
                 .category(domainEntity.getCategory())
                 .createdAt(domainEntity.getCreatedAt())
                 .updatedAt(domainEntity.getUpdatedAt())
+                // Campos de recorrência
+                .isRecurring(domainEntity.isRecurring())
+                .recurrenceType(mapToJpaRecurrenceType(domainEntity.getRecurrenceType()))
+                .recurrenceInterval(domainEntity.getRecurrenceInterval())
+                .recurrenceEndDate(domainEntity.getRecurrenceEndDate())
+                .parentTaskId(domainEntity.getParentTaskId())
                 .build();
 
         // Map republic if present
@@ -107,26 +131,26 @@ public class TaskMapper {
     }
 
     // Status mapping methods
-    public Task.TaskStatus mapToJpaTaskStatus(Task.TaskStatus domainStatus) {
+    public TaskJpaEntity.TaskStatusJpa mapToJpaTaskStatus(Task.TaskStatus domainStatus) {
         if (domainStatus == null) return null;
 
         switch (domainStatus) {
             case PENDING:
-                return Task.TaskStatus.PENDING;
+                return TaskJpaEntity.TaskStatusJpa.PENDING;
             case IN_PROGRESS:
-                return Task.TaskStatus.IN_PROGRESS;
+                return TaskJpaEntity.TaskStatusJpa.IN_PROGRESS;
             case COMPLETED:
-                return Task.TaskStatus.COMPLETED;
+                return TaskJpaEntity.TaskStatusJpa.COMPLETED;
             case OVERDUE:
-                return Task.TaskStatus.OVERDUE;
+                return TaskJpaEntity.TaskStatusJpa.OVERDUE;
             case CANCELLED:
-                return Task.TaskStatus.CANCELLED;
+                return TaskJpaEntity.TaskStatusJpa.CANCELLED;
             default:
                 throw new IllegalArgumentException("Unknown task status: " + domainStatus);
         }
     }
 
-    public Task.TaskStatus mapToDomainTaskStatus(Task.TaskStatus jpaStatus) {
+    public Task.TaskStatus mapToDomainTaskStatus(TaskJpaEntity.TaskStatusJpa jpaStatus) {
         if (jpaStatus == null) return null;
 
         switch (jpaStatus) {
@@ -142,6 +166,41 @@ public class TaskMapper {
                 return Task.TaskStatus.CANCELLED;
             default:
                 throw new IllegalArgumentException("Unknown task status: " + jpaStatus);
+        }
+    }
+
+    // Recurrence type mapping methods
+    public TaskJpaEntity.RecurrenceTypeJpa mapToJpaRecurrenceType(Task.RecurrenceType domainType) {
+        if (domainType == null) return null;
+
+        switch (domainType) {
+            case DAILY:
+                return TaskJpaEntity.RecurrenceTypeJpa.DAILY;
+            case WEEKLY:
+                return TaskJpaEntity.RecurrenceTypeJpa.WEEKLY;
+            case MONTHLY:
+                return TaskJpaEntity.RecurrenceTypeJpa.MONTHLY;
+            case YEARLY:
+                return TaskJpaEntity.RecurrenceTypeJpa.YEARLY;
+            default:
+                throw new IllegalArgumentException("Unknown recurrence type: " + domainType);
+        }
+    }
+
+    public Task.RecurrenceType mapToDomainRecurrenceType(TaskJpaEntity.RecurrenceTypeJpa jpaType) {
+        if (jpaType == null) return null;
+
+        switch (jpaType) {
+            case DAILY:
+                return Task.RecurrenceType.DAILY;
+            case WEEKLY:
+                return Task.RecurrenceType.WEEKLY;
+            case MONTHLY:
+                return Task.RecurrenceType.MONTHLY;
+            case YEARLY:
+                return Task.RecurrenceType.YEARLY;
+            default:
+                throw new IllegalArgumentException("Unknown recurrence type: " + jpaType);
         }
     }
 }

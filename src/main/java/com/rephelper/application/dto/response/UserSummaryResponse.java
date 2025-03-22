@@ -13,7 +13,7 @@ import java.util.UUID; /**
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserSummaryResponse {
-    private UUID id;
+    private UUID uid;
     private String name;
     private String nickname;
     private String email;

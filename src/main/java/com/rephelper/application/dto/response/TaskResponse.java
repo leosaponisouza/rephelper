@@ -31,5 +31,11 @@ public class TaskResponse {
     private String category;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-}
 
+    // Campos para recorrência
+    private boolean isRecurring;
+    private String recurrenceType;
+    private Integer recurrenceInterval;
+    private LocalDateTime recurrenceEndDate;
+    private Long parentTaskId;
+}

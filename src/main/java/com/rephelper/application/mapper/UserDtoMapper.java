@@ -64,7 +64,7 @@ public class UserDtoMapper {
         if (user == null) return null;
 
         return UserSummaryResponse.builder()
-                .id(user.getId())
+                .uid(user.getId())
                 .name(user.getName())
                 .nickname(user.getNickname())
                 .email(user.getEmail())

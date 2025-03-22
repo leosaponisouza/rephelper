@@ -26,15 +26,36 @@ public class TaskDtoMapper {
                 .dueDate(request.getDueDate())
                 .category(request.getCategory())
                 .status(Task.TaskStatus.PENDING)
+                .isRecurring(request.getIsRecurring() != null ? request.getIsRecurring() : false)
                 .build();
 
-        if (request.getRepublicId() != null) {
+        // Adiciona os campos de recorrência se a tarefa for recorrente
+        if (task.isRecurring() && request.getRecurrenceType() != null) {
             task = Task.builder()
                     .title(task.getTitle())
                     .description(task.getDescription())
                     .dueDate(task.getDueDate())
                     .category(task.getCategory())
                     .status(task.getStatus())
+                    .isRecurring(task.isRecurring())
+                    .recurrenceType(Task.RecurrenceType.valueOf(request.getRecurrenceType()))
+                    .recurrenceInterval(request.getRecurrenceInterval())
+                    .recurrenceEndDate(request.getRecurrenceEndDate())
+                    .build();
+        }
+
+        if (request.getRepublicId() != null) {
+            // Mantém os campos já definidos e adiciona a república
+            task = Task.builder()
+                    .title(task.getTitle())
+                    .description(task.getDescription())
+                    .dueDate(task.getDueDate())
+                    .category(task.getCategory())
+                    .status(task.getStatus())
+                    .isRecurring(task.isRecurring())
+                    .recurrenceType(task.getRecurrenceType())
+                    .recurrenceInterval(task.getRecurrenceInterval())
+                    .recurrenceEndDate(task.getRecurrenceEndDate())
                     .republic(Republic.builder().id(request.getRepublicId()).build())
                     .build();
         }
@@ -59,6 +80,12 @@ public class TaskDtoMapper {
                 .category(task.getCategory())
                 .createdAt(task.getCreatedAt())
                 .updatedAt(task.getUpdatedAt())
+                // Adiciona os campos de recorrência no response
+                .isRecurring(task.isRecurring())
+                .recurrenceType(task.getRecurrenceType() != null ? task.getRecurrenceType().name() : null)
+                .recurrenceInterval(task.getRecurrenceInterval())
+                .recurrenceEndDate(task.getRecurrenceEndDate())
+                .parentTaskId(task.getParentTaskId())
                 .build();
     }
 

@@ -300,36 +300,21 @@ public class FinancialDashboardController {
         List<Expense> pendingExpenses = expenseService.getExpensesByRepublicIdAndStatus(
                 republicId, Expense.ExpenseStatus.PENDING);
 
-        // Get approved expenses awaiting reimbursement
-        List<Expense> approvedExpenses = expenseService.getExpensesByRepublicIdAndStatus(
-                republicId, Expense.ExpenseStatus.APPROVED);
-
         // Convert to DTO
         List<ExpenseResponse> pendingExpensesDto = expenseDtoMapper.toExpenseResponseList(pendingExpenses);
-        List<ExpenseResponse> approvedExpensesDto = expenseDtoMapper.toExpenseResponseList(approvedExpenses);
 
         // Calculate totals
         BigDecimal pendingTotal = pendingExpenses.stream()
                 .map(Expense::getAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        BigDecimal approvedTotal = approvedExpenses.stream()
-                .map(Expense::getAmount)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         // Build response
         Map<String, Object> response = new HashMap<>();
         response.put("pendingExpenses", pendingExpensesDto);
         response.put("pendingExpensesCount", pendingExpenses.size());
         response.put("pendingExpensesTotal", pendingTotal);
-        response.put("approvedExpenses", approvedExpensesDto);
-        response.put("approvedExpensesCount", approvedExpenses.size());
-        response.put("approvedExpensesTotal", approvedTotal);
 
-        // Get current finances to check if there's enough balance for reimbursements
-        RepublicFinances finances = republicFinancesService.getOrCreateRepublicFinances(republicId);
-        response.put("currentBalance", finances.getCurrentBalance());
-        response.put("hasEnoughBalance", finances.hasEnoughBalance(approvedTotal));
 
         return ResponseEntity.ok(response);
     }

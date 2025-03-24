@@ -23,7 +23,7 @@ public class UpdateTaskRequest {
     private String category;
     
     // Campos para recorrência
-    private Boolean isRecurring;
+    private Boolean recurring;
     
     private String recurrenceType; // DAILY, WEEKLY, MONTHLY, YEARLY
     

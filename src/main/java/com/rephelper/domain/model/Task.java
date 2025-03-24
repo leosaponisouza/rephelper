@@ -3,7 +3,6 @@ package com.rephelper.domain.model;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.UUID;
 
 import com.rephelper.application.dto.request.UpdateTaskRequest;
 import lombok.AllArgsConstructor;
@@ -128,8 +127,8 @@ public class Task {
         }
         
         // Atualiza informações de recorrência
-        if (request.getIsRecurring() != null) {
-            this.isRecurring = request.getIsRecurring();
+        if (request.getRecurring() != null) {
+            this.isRecurring = request.getRecurring();
         }
         
         if (request.getRecurrenceType() != null) {

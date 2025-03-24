@@ -151,7 +151,7 @@ public class TaskServiceImpl implements TaskServicePort {
         }
 
         // Validar dados de recorrência
-        if (request.getIsRecurring() != null && request.getIsRecurring()) {
+        if (request.getRecurring() != null && request.getRecurring()) {
             if (request.getRecurrenceType() == null && task.getRecurrenceType() == null) {
                 throw new ValidationException("Recurrence type is required for recurring tasks");
             }

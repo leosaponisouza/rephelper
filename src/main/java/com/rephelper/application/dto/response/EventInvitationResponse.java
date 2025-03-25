@@ -16,6 +16,7 @@ public class EventInvitationResponse {
     private UUID userId;
     private String userName;
     private String userEmail;
-    private String userProfilePicture;
+    private String nickName;
+    private String profilePictureUrl;
     private Event.InvitationStatus status;
 }

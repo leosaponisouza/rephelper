@@ -88,7 +88,8 @@ public class EventDtoMapper {
                 .userId(invitation.getUser().getId())
                 .userName(invitation.getUser().getName())
                 .userEmail(invitation.getUser().getEmail())
-                .userProfilePicture(invitation.getUser().getProfilePictureUrl())
+                .nickName(invitation.getUser().getNickname())
+                .profilePictureUrl(invitation.getUser().getProfilePictureUrl())
                 .status(invitation.getStatus())
                 .build();
     }

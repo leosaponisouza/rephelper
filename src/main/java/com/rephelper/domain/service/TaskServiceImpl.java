@@ -38,31 +38,31 @@ public class TaskServiceImpl implements TaskServicePort {
     public Task createTask(Task task, UUID creatorUserId) {
         // Validar usuário
         User user = userRepository.findById(creatorUserId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + creatorUserId));
+                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado com id: " + creatorUserId));
 
         // Verificar se o usuário pertence à república
         if (user.getCurrentRepublic() == null ||
                 !user.getCurrentRepublic().getId().equals(task.getRepublic().getId())) {
-            throw new ForbiddenException("You can only create tasks for your own republic");
+            throw new ForbiddenException("Você só pode criar tarefas para sua própria república");
         }
 
         // Verificar se a república existe
         if (!republicRepository.findById(task.getRepublic().getId()).isPresent()) {
-            throw new ResourceNotFoundException("Republic not found with id: " + task.getRepublic().getId());
+            throw new ResourceNotFoundException("República não encontrada com id: " + task.getRepublic().getId());
         }
 
         // Validar dados de recorrência
         if (task.isRecurring()) {
             if (task.getRecurrenceType() == null) {
-                throw new ValidationException("Recurrence type is required for recurring tasks");
+                throw new ValidationException("O tipo de recorrência é obrigatório para tarefas recorrentes");
             }
 
             if (task.getRecurrenceInterval() == null || task.getRecurrenceInterval() <= 0) {
-                throw new ValidationException("Recurrence interval must be a positive number");
+                throw new ValidationException("O intervalo de recorrência deve ser um número positivo");
             }
 
             if (task.getDueDate() == null) {
-                throw new ValidationException("Due date is required for recurring tasks");
+                throw new ValidationException("A data de vencimento é obrigatória para tarefas recorrentes");
             }
         }
 
@@ -79,8 +79,8 @@ public class TaskServiceImpl implements TaskServicePort {
                 if (member.isRepublicAdmin() && !member.getId().equals(creatorUserId)) {
                     notificationService.createNotification(
                             member.getId(),
-                            "New Unassigned Task",
-                            "A new task '" + savedTask.getTitle() + "' was created and needs to be assigned",
+                            "Nova Tarefa Não Atribuída",
+                            "Uma nova tarefa '" + savedTask.getTitle() + "' foi criada e precisa ser atribuída",
                             com.rephelper.domain.model.Notification.NotificationType.TASK_ASSIGNED,
                             "task",
                             savedTask.getId().toString()
@@ -98,7 +98,7 @@ public class TaskServiceImpl implements TaskServicePort {
     public List<Task> getAllTasksByRepublicId(UUID republicId) {
         // Verificar se a república existe
         if (!republicRepository.findById(republicId).isPresent()) {
-            throw new ResourceNotFoundException("Republic not found with id: " + republicId);
+            throw new ResourceNotFoundException("República não encontrada com id: " + republicId);
         }
 
         // Use findWithFilters with default sorting to ensure ordering is applied
@@ -113,7 +113,7 @@ public class TaskServiceImpl implements TaskServicePort {
     @Transactional(readOnly = true)
     public Task getTaskById(Long id) {
         return taskRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Task not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Tarefa não encontrada com id: " + id));
     }
 
     @Override
@@ -121,11 +121,11 @@ public class TaskServiceImpl implements TaskServicePort {
     public List<Task> getTasksByCategory(UUID republicId, String category) {
         // Verificar se a república existe
         if (!republicRepository.findById(republicId).isPresent()) {
-            throw new ResourceNotFoundException("Republic not found with id: " + republicId);
+            throw new ResourceNotFoundException("República não encontrada com id: " + republicId);
         }
 
         if (category == null || category.trim().isEmpty()) {
-            throw new ValidationException("Category cannot be empty");
+            throw new ValidationException("A categoria não pode estar vazia");
         }
 
         // Use findWithFilters with category filter and default sorting
@@ -142,11 +142,11 @@ public class TaskServiceImpl implements TaskServicePort {
     public List<Task> getTasksByStatus(UUID republicId, Task.TaskStatus status) {
         // Verificar se a república existe
         if (!republicRepository.findById(republicId).isPresent()) {
-            throw new ResourceNotFoundException("Republic not found with id: " + republicId);
+            throw new ResourceNotFoundException("República não encontrada com id: " + republicId);
         }
 
         if (status == null) {
-            throw new ValidationException("Status cannot be null");
+            throw new ValidationException("O status não pode ser nulo");
         }
 
         // Use findWithFilters with status filter and default sorting
@@ -164,29 +164,29 @@ public class TaskServiceImpl implements TaskServicePort {
 
         // Validar usuário
         User user = userRepository.findById(modifierUserId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + modifierUserId));
+                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado com id: " + modifierUserId));
 
 
         boolean isMember = user.getCurrentRepublic() != null &&
                 user.getCurrentRepublic().getId().equals(task.getRepublic().getId());
 
         if (!isMember) {
-            throw new ForbiddenException("You do not have permission to update this task");
+            throw new ForbiddenException("Você não tem permissão para atualizar esta tarefa");
         }
 
         // Validar dados de recorrência
         if (request.getRecurring() != null && request.getRecurring()) {
             if (request.getRecurrenceType() == null && task.getRecurrenceType() == null) {
-                throw new ValidationException("Recurrence type is required for recurring tasks");
+                throw new ValidationException("O tipo de recorrência é obrigatório para tarefas recorrentes");
             }
             
             if ((request.getRecurrenceInterval() == null || request.getRecurrenceInterval() <= 0) && 
                 (task.getRecurrenceInterval() == null || task.getRecurrenceInterval() <= 0)) {
-                throw new ValidationException("Recurrence interval must be a positive number");
+                throw new ValidationException("O intervalo de recorrência deve ser um número positivo");
             }
             
             if (request.getDueDate() == null && task.getDueDate() == null) {
-                throw new ValidationException("Due date is required for recurring tasks");
+                throw new ValidationException("A data de vencimento é obrigatória para tarefas recorrentes");
             }
         }
 
@@ -238,8 +238,8 @@ public class TaskServiceImpl implements TaskServicePort {
                     (task.getAssignedUsers() == null || !task.getAssignedUsers().contains(member))) {
                 notificationService.createNotification(
                         member.getId(),
-                        "Task Completed",
-                        "Task '" + task.getTitle() + "' has been completed by " + user.getName(),
+                        "Tarefa Concluída",
+                        "A tarefa '" + task.getTitle() + "' foi concluída por " + user.getName(),
                         com.rephelper.domain.model.Notification.NotificationType.TASK_COMPLETED,
                         "task",
                         id.toString()
@@ -258,8 +258,8 @@ public class TaskServiceImpl implements TaskServicePort {
                     for (User assignedUser : newTask.getAssignedUsers()) {
                         notificationService.createNotification(
                                 assignedUser.getId(),
-                                "New Recurring Task",
-                                "A new recurring task '" + newTask.getTitle() + "' has been created and assigned to you",
+                                "Nova Tarefa Recorrente",
+                                "Uma nova tarefa recorrente '" + newTask.getTitle() + "' foi criada e atribuída a você",
                                 com.rephelper.domain.model.Notification.NotificationType.TASK_ASSIGNED,
                                 "task",
                                 newTask.getId().toString()

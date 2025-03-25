@@ -1,6 +1,8 @@
 package com.rephelper.interfaces.rest.republic;
 
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
@@ -17,11 +19,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.rephelper.application.dto.request.CreateRepublicRequest;
 import com.rephelper.application.dto.request.JoinRepublicRequest;
+import com.rephelper.application.dto.request.RegenerateCodeRequest;
 import com.rephelper.application.dto.request.UpdateRepublicRequest;
 import com.rephelper.application.dto.response.ApiResponse;
 import com.rephelper.application.dto.response.AuthResponse;
 import com.rephelper.application.dto.response.RepublicResponse;
 import com.rephelper.application.dto.response.UserResponse;
+import com.rephelper.application.dto.response.RepublicCodeResponse;
 import com.rephelper.application.mapper.RepublicDtoMapper;
 import com.rephelper.application.mapper.UserDtoMapper;
 import com.rephelper.domain.exception.ForbiddenException;
@@ -241,6 +245,52 @@ public class RepublicController {
     public ResponseEntity<List<UserResponse>> getRepublicMembers(@PathVariable UUID id) {
         List<User> members = republicService.getRepublicMembers(id);
         return ResponseEntity.ok(userDtoMapper.toUserResponseList(members));
+    }
+
+    @PostMapping("/{id}/regenerate-code")
+    @Operation(summary = "Regenerate code", description = "Regenerate the invitation code for a republic")
+    public ResponseEntity<RepublicCodeResponse> regenerateRepublicCode(
+            @PathVariable UUID id,
+            @RequestBody(required = false) RegenerateCodeRequest request,
+            @AuthenticationPrincipal CustomUserDetails currentUser) {
+
+        // Get current republic
+        Republic republic = republicService.getRepublicById(id);
+
+        // Check if user is owner or admin
+        boolean isSystemAdmin = "admin".equals(currentUser.getRole());
+        boolean isOwner = republic.getOwner().getId().equals(currentUser.getUserId());
+        boolean isRepublicAdmin = republic.isAdmin(userService.getUserById(currentUser.getUserId()));
+
+        if (!isSystemAdmin && !isOwner && !isRepublicAdmin) {
+            throw new ForbiddenException("Você não tem permissão para regenerar o código desta república");
+        }
+
+        Republic updatedRepublic;
+        
+        // Se um código personalizado foi fornecido, use-o
+        if (request != null && request.getCustomCode() != null && !request.getCustomCode().isBlank()) {
+            updatedRepublic = republicService.regenerateCodeWithCustomCode(id, request.getCustomCode());
+        } else {
+            // Caso contrário, gere um código aleatório
+            updatedRepublic = republicService.regenerateCode(id);
+        }
+
+        // Return only the code
+        RepublicCodeResponse response = RepublicCodeResponse.builder()
+                .code(updatedRepublic.getCode())
+                .build();
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/code-length")
+    @Operation(summary = "Get code length", description = "Get the required length for invitation codes")
+    public ResponseEntity<Map<String, Integer>> getCodeLength() {
+        int codeLength = republicService.getCodeLength();
+        Map<String, Integer> response = new HashMap<>();
+        response.put("codeLength", codeLength);
+        return ResponseEntity.ok(response);
     }
 
 }

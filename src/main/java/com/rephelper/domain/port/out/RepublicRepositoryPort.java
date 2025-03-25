@@ -56,4 +56,14 @@ public interface RepublicRepositoryPort {
      * Gera um código único para uma república
      */
     String generateUniqueCode();
+
+    /**
+     * Valida se o formato do código personalizado é válido
+     */
+    boolean isValidCodeFormat(String code);
+
+    /**
+     * Obtém o tamanho do código de convite
+     */
+    int getCodeLength();
 }

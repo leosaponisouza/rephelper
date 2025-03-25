@@ -4,9 +4,11 @@ import com.rephelper.domain.exception.ForbiddenException;
 import com.rephelper.domain.exception.ResourceNotFoundException;
 import com.rephelper.domain.exception.ValidationException;
 import com.rephelper.domain.model.Income;
+import com.rephelper.domain.model.Notification;
 import com.rephelper.domain.model.Republic;
 import com.rephelper.domain.model.User;
 import com.rephelper.domain.port.in.IncomeServicePort;
+import com.rephelper.domain.port.in.NotificationServicePort;
 import com.rephelper.domain.port.in.RepublicFinancesServicePort;
 import com.rephelper.domain.port.out.IncomeRepositoryPort;
 import com.rephelper.domain.port.out.RepublicRepositoryPort;
@@ -29,30 +31,31 @@ public class IncomeServiceImpl implements IncomeServicePort {
     private final UserRepositoryPort userRepository;
     private final RepublicRepositoryPort republicRepository;
     private final RepublicFinancesServicePort republicFinancesService;
+    private final NotificationServicePort notificationService;
 
     @Override
     public Income createIncome(Income income, UUID contributorId) {
-        // Validate user
+        // Validar usuário
         User contributor = userRepository.findById(contributorId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + contributorId));
 
-        // Verify user belongs to the republic
+        // Verificar se o usuário pertence à república
         if (contributor.getCurrentRepublic() == null ||
                 !contributor.getCurrentRepublic().getId().equals(income.getRepublic().getId())) {
             throw new ForbiddenException("You can only create incomes for your own republic");
         }
 
-        // Verify republic exists
+        // Verificar se a república existe
         Income finalIncome = income;
         Republic republic = republicRepository.findById(income.getRepublic().getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Republic not found with id: " + finalIncome.getRepublic().getId()));
 
-        // Validate amount is positive
+        // Validar se o valor é positivo
         if (income.getAmount() == null || income.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
             throw new ValidationException("Income amount must be positive");
         }
 
-        // Set contributor and timestamp
+        // Configurar contribuidor e timestamp
         income = Income.builder()
                 .republic(republic)
                 .contributor(contributor)
@@ -63,26 +66,53 @@ public class IncomeServiceImpl implements IncomeServicePort {
                 .createdAt(LocalDateTime.now())
                 .build();
 
-        // Save income
+        // Salvar receita
         Income savedIncome = incomeRepository.save(income);
 
-        // Update republic finances
+        // Atualizar finanças da república
         republicFinancesService.updateBalance(republic.getId(), income.getAmount());
+
+        // Criar notificação para o contribuidor
+        notificationService.createNotification(
+                contributorId,
+                "Receita Registrada",
+                "Você registrou com sucesso uma receita de R$ " + income.getAmount() + " da fonte: " + income.getSource(),
+                Notification.NotificationType.INCOME_CREATED,
+                "income",
+                savedIncome.getId().toString()
+        );
+
+        // Notificar administradores da república sobre nova receita (especialmente para valores significativos)
+        boolean isSignificantAmount = income.getAmount().compareTo(new BigDecimal("100")) > 0;
+        if (isSignificantAmount) {
+            List<User> republicMembers = userRepository.findByCurrentRepublicId(republic.getId());
+            for (User member : republicMembers) {
+                if (member.isRepublicAdmin() && !member.getId().equals(contributorId)) {
+                    notificationService.createNotification(
+                            member.getId(),
+                            "Nova Receita Registrada",
+                            contributor.getName() + " registrou uma nova receita de R$ " + income.getAmount() + " da fonte: " + income.getSource(),
+                            Notification.NotificationType.INCOME_CREATED,
+                            "income",
+                            savedIncome.getId().toString()
+                    );
+                }
+            }
+        }
 
         return savedIncome;
     }
-
     @Override
     public Income updateIncome(Long id, String description, BigDecimal amount,
                                LocalDateTime incomeDate, String source, UUID modifierId) {
-        // Get income
+        // Obter receita
         Income income = getIncomeById(id);
 
-        // Validate user
+        // Validar usuário
         User modifier = userRepository.findById(modifierId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + modifierId));
 
-        // Check if user is contributor or admin
+        // Verificar se o usuário é o contribuidor ou administrador
         boolean isContributor = income.getContributor() != null && income.getContributor().getId().equals(modifierId);
         boolean isRepublicAdmin = modifier.getCurrentRepublic() != null &&
                 modifier.getCurrentRepublic().getId().equals(income.getRepublic().getId()) &&
@@ -92,20 +122,51 @@ public class IncomeServiceImpl implements IncomeServicePort {
             throw new ForbiddenException("You do not have permission to update this income");
         }
 
-        // Calculate delta for balance update
+        // Calcular delta para atualização do saldo
         BigDecimal originalAmount = income.getAmount();
         BigDecimal newAmount = amount != null ? amount : originalAmount;
         BigDecimal delta = newAmount.subtract(originalAmount);
 
-        // Update income details
+        // Atualizar detalhes da receita
         income.updateDetails(description, amount, incomeDate, source);
 
-        // Save changes
+        // Salvar mudanças
         Income updatedIncome = incomeRepository.save(income);
 
-        // If amount changed, update republic finances
+        // Se o valor mudou, atualizar finanças da república
         if (delta.compareTo(BigDecimal.ZERO) != 0) {
             republicFinancesService.updateBalance(income.getRepublic().getId(), delta);
+
+            // Notificar o contribuidor sobre a atualização da receita (se não for ele quem está atualizando)
+            if (income.getContributor() != null && !income.getContributor().getId().equals(modifierId)) {
+                notificationService.createNotification(
+                        income.getContributor().getId(),
+                        "Receita Atualizada",
+                        "Seu registro de receita para '" + income.getDescription() + "' foi atualizado",
+                        Notification.NotificationType.INCOME_CREATED, // Reutilizando este tipo
+                        "income",
+                        income.getId().toString()
+                );
+            }
+
+            // Notificar administradores sobre alterações significativas de valor
+            if (delta.abs().compareTo(new BigDecimal("50")) > 0) {
+                List<User> republicMembers = userRepository.findByCurrentRepublicId(income.getRepublic().getId());
+                for (User member : republicMembers) {
+                    if (member.isRepublicAdmin() && !member.getId().equals(modifierId) &&
+                            (income.getContributor() == null || !member.getId().equals(income.getContributor().getId()))) {
+                        notificationService.createNotification(
+                                member.getId(),
+                                "Valor de Receita Modificado",
+                                "O valor da receita '" + income.getDescription() + "' foi modificado de R$ " +
+                                        originalAmount + " para R$ " + newAmount,
+                                Notification.NotificationType.INCOME_CREATED, // Reutilizando este tipo
+                                "income",
+                                income.getId().toString()
+                        );
+                    }
+                }
+            }
         }
 
         return updatedIncome;
@@ -169,14 +230,14 @@ public class IncomeServiceImpl implements IncomeServicePort {
 
     @Override
     public void deleteIncome(Long id, UUID deleterId) {
-        // Get income
+        // Obter receita
         Income income = getIncomeById(id);
 
-        // Validate user
+        // Validar usuário
         User deleter = userRepository.findById(deleterId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + deleterId));
 
-        // Check if user is contributor or admin
+        // Verificar se o usuário é o contribuidor ou administrador
         boolean isContributor = income.getContributor() != null && income.getContributor().getId().equals(deleterId);
         boolean isRepublicAdmin = deleter.getCurrentRepublic() != null &&
                 deleter.getCurrentRepublic().getId().equals(income.getRepublic().getId()) &&
@@ -186,10 +247,46 @@ public class IncomeServiceImpl implements IncomeServicePort {
             throw new ForbiddenException("You do not have permission to delete this income");
         }
 
-        // Update republic finances (subtract the income amount)
+        // Atualizar finanças da república (subtrair o valor da receita)
         republicFinancesService.updateBalance(income.getRepublic().getId(), income.getAmount().negate());
 
-        // Delete income
+        // Notificar administradores e contribuidor sobre a exclusão da receita
+        String notificationTitle = "Receita Excluída";
+        String notificationMessage = "Uma receita de R$ " + income.getAmount() + " referente a '" + income.getDescription() +
+                "' foi excluída por " + deleter.getName();
+
+        // Notificar o contribuidor se ele não excluiu a receita ele mesmo
+        if (income.getContributor() != null && !income.getContributor().getId().equals(deleterId)) {
+            notificationService.createNotification(
+                    income.getContributor().getId(),
+                    notificationTitle,
+                    notificationMessage,
+                    Notification.NotificationType.INCOME_CREATED, // Reutilizando este tipo
+                    "income",
+                    income.getId().toString()
+            );
+        }
+
+        // Notificar administradores para valores significativos
+        if (income.getAmount().compareTo(new BigDecimal("100")) > 0) {
+            List<User> republicMembers = userRepository.findByCurrentRepublicId(income.getRepublic().getId());
+            for (User member : republicMembers) {
+                if (member.isRepublicAdmin() && !member.getId().equals(deleterId) &&
+                        (income.getContributor() == null || !member.getId().equals(income.getContributor().getId()))) {
+                    notificationService.createNotification(
+                            member.getId(),
+                            notificationTitle,
+                            notificationMessage,
+                            Notification.NotificationType.INCOME_CREATED, // Reutilizando este tipo
+                            "income",
+                            income.getId().toString()
+                    );
+                }
+            }
+        }
+
+        // Excluir receita
         incomeRepository.delete(income);
     }
+
 }

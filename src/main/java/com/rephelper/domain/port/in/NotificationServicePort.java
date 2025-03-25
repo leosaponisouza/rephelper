@@ -81,7 +81,47 @@ public interface NotificationServicePort {
     Notification notifyExpenseRejected(UUID recipientId, Long expenseId, String description, String reason);
 
     /**
+     * Creates an expense added notification
+     */
+    Notification notifyExpenseAdded(UUID recipientId, Long expenseId, String description, UUID creatorId);
+
+    /**
+     * Creates an expense paid notification
+     */
+    Notification notifyExpensePaid(UUID recipientId, Long expenseId, String description, UUID paidById);
+
+    /**
      * Creates an event invitation notification
      */
     Notification notifyEventInvitation(UUID recipientId, Long eventId, String eventTitle);
+
+    /**
+     * Creates an event creation notification
+     */
+    Notification notifyEventCreated(UUID recipientId, Long eventId, String eventTitle, UUID creatorId);
+
+    /**
+     * Creates a republic invitation notification
+     */
+    Notification notifyRepublicInvitation(UUID recipientId, UUID republicId, String republicName, UUID invitedById);
+
+    /**
+     * Creates a republic left notification
+     */
+    Notification notifyRepublicLeft(UUID recipientId, UUID republicId, String republicName, UUID userId, String userName);
+
+    /**
+     * Creates a system notification
+     */
+    Notification notifySystemNotification(UUID recipientId, String title, String message);
+
+    /**
+     * Creates a task due soon notification
+     */
+    Notification notifyTaskDueSoon(UUID recipientId, Long taskId, String taskTitle, String message);
+
+    /**
+     * Creates a task overdue notification
+     */
+    Notification notifyTaskOverdue(UUID recipientId, Long taskId, String taskTitle, String message);
 }

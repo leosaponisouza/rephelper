@@ -79,6 +79,8 @@ public class NotificationMapper {
                 return NotificationJpaEntity.NotificationTypeJpa.TASK_COMPLETED;
             case TASK_DUE_SOON:
                 return NotificationJpaEntity.NotificationTypeJpa.TASK_DUE_SOON;
+            case TASK_OVERDUE:
+                return NotificationJpaEntity.NotificationTypeJpa.TASK_OVERDUE;
             case EXPENSE_CREATED:
                 return NotificationJpaEntity.NotificationTypeJpa.EXPENSE_CREATED;
             case EXPENSE_APPROVED:
@@ -87,18 +89,30 @@ public class NotificationMapper {
                 return NotificationJpaEntity.NotificationTypeJpa.EXPENSE_REJECTED;
             case EXPENSE_REIMBURSED:
                 return NotificationJpaEntity.NotificationTypeJpa.EXPENSE_REIMBURSED;
+            case EXPENSE_ADDED:
+                return NotificationJpaEntity.NotificationTypeJpa.EXPENSE_ADDED;
+            case EXPENSE_PAID:
+                return NotificationJpaEntity.NotificationTypeJpa.EXPENSE_PAID;
             case INCOME_CREATED:
                 return NotificationJpaEntity.NotificationTypeJpa.INCOME_CREATED;
             case EVENT_INVITATION:
                 return NotificationJpaEntity.NotificationTypeJpa.EVENT_INVITATION;
             case EVENT_REMINDER:
                 return NotificationJpaEntity.NotificationTypeJpa.EVENT_REMINDER;
+            case EVENT_CREATED:
+                return NotificationJpaEntity.NotificationTypeJpa.EVENT_CREATED;
             case REPUBLIC_JOINED:
                 return NotificationJpaEntity.NotificationTypeJpa.REPUBLIC_JOINED;
+            case REPUBLIC_LEFT:
+                return NotificationJpaEntity.NotificationTypeJpa.REPUBLIC_LEFT;
+            case REPUBLIC_INVITATION:
+                return NotificationJpaEntity.NotificationTypeJpa.REPUBLIC_INVITATION;
             case ADMIN_ASSIGNED:
                 return NotificationJpaEntity.NotificationTypeJpa.ADMIN_ASSIGNED;
             case SYSTEM_MESSAGE:
                 return NotificationJpaEntity.NotificationTypeJpa.SYSTEM_MESSAGE;
+            case SYSTEM_NOTIFICATION:
+                return NotificationJpaEntity.NotificationTypeJpa.SYSTEM_NOTIFICATION;
             default:
                 throw new IllegalArgumentException("Unknown notification type: " + type);
         }
@@ -114,16 +128,23 @@ public class NotificationMapper {
             case TASK_ASSIGNED -> Notification.NotificationType.TASK_ASSIGNED;
             case TASK_COMPLETED -> Notification.NotificationType.TASK_COMPLETED;
             case TASK_DUE_SOON -> Notification.NotificationType.TASK_DUE_SOON;
+            case TASK_OVERDUE -> Notification.NotificationType.TASK_OVERDUE;
             case EXPENSE_CREATED -> Notification.NotificationType.EXPENSE_CREATED;
             case EXPENSE_APPROVED -> Notification.NotificationType.EXPENSE_APPROVED;
             case EXPENSE_REJECTED -> Notification.NotificationType.EXPENSE_REJECTED;
             case EXPENSE_REIMBURSED -> Notification.NotificationType.EXPENSE_REIMBURSED;
+            case EXPENSE_ADDED -> Notification.NotificationType.EXPENSE_ADDED;
+            case EXPENSE_PAID -> Notification.NotificationType.EXPENSE_PAID;
             case INCOME_CREATED -> Notification.NotificationType.INCOME_CREATED;
             case EVENT_INVITATION -> Notification.NotificationType.EVENT_INVITATION;
             case EVENT_REMINDER -> Notification.NotificationType.EVENT_REMINDER;
+            case EVENT_CREATED -> Notification.NotificationType.EVENT_CREATED;
             case REPUBLIC_JOINED -> Notification.NotificationType.REPUBLIC_JOINED;
+            case REPUBLIC_LEFT -> Notification.NotificationType.REPUBLIC_LEFT;
+            case REPUBLIC_INVITATION -> Notification.NotificationType.REPUBLIC_INVITATION;
             case ADMIN_ASSIGNED -> Notification.NotificationType.ADMIN_ASSIGNED;
             case SYSTEM_MESSAGE -> Notification.NotificationType.SYSTEM_MESSAGE;
+            case SYSTEM_NOTIFICATION -> Notification.NotificationType.SYSTEM_NOTIFICATION;
             default -> throw new IllegalArgumentException("Unknown notification type: " + type);
         };
     }

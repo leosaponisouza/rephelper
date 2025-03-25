@@ -45,8 +45,14 @@ public class NotificationScheduler {
             // Notificar usuários atribuídos à tarefa
             for (User user : task.getAssignedUsers()) {
                 String formattedDate = task.getDueDate().format(DATE_FORMAT);
-
-                notificationService.notifyTaskAssigned(user.getId(), task.getId(), task.getTitle());
+                String message = "A tarefa '" + task.getTitle() + "' tem prazo de entrega em " + formattedDate + " (menos de 24h)";
+                
+                notificationService.notifyTaskDueSoon(
+                    user.getId(),
+                    task.getId(),
+                    task.getTitle(),
+                    message
+                );
                 
                 log.debug("Notificação enviada para usuário {} sobre tarefa {}", user.getId(), task.getId());
             }
@@ -72,8 +78,14 @@ public class NotificationScheduler {
             // Notificar usuários atribuídos à tarefa
             for (User user : task.getAssignedUsers()) {
                 String formattedDate = task.getDueDate().format(DATE_FORMAT);
-
-                notificationService.notifyTaskAssigned(user.getId(), task.getId(), task.getTitle());
+                String message = "A tarefa '" + task.getTitle() + "' tem prazo de entrega em " + formattedDate + " (3 dias)";
+                
+                notificationService.notifyTaskDueSoon(
+                    user.getId(),
+                    task.getId(),
+                    task.getTitle(),
+                    message
+                );
                 
                 log.debug("Notificação enviada para usuário {} sobre tarefa {}", user.getId(), task.getId());
             }
@@ -99,14 +111,13 @@ public class NotificationScheduler {
             // Notificar usuários atribuídos à tarefa
             for (User user : task.getAssignedUsers()) {
                 String formattedDate = task.getDueDate().format(DATE_FORMAT);
+                String message = "A tarefa '" + task.getTitle() + "' está atrasada! O prazo era " + formattedDate;
                 
-                notificationService.createNotification(
+                notificationService.notifyTaskOverdue(
                     user.getId(),
-                    "Tarefa atrasada",
-                    "A tarefa '" + task.getTitle() + "' está atrasada! O prazo era " + formattedDate,
-                        Notification.NotificationType.TASK_DUE_SOON,
-                    "task",
-                    task.getId().toString()
+                    task.getId(),
+                    task.getTitle(),
+                    message
                 );
                 
                 log.debug("Notificação enviada para usuário {} sobre tarefa atrasada {}", user.getId(), task.getId());

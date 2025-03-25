@@ -66,4 +66,19 @@ public interface RepublicServicePort {
      * Remove o status de administrador de um usuário na república
      */
     Republic removeRepublicAdmin(UUID republicId, UUID userId);
+    
+    /**
+     * Regenera o código de convite da república com um código aleatório
+     */
+    Republic regenerateCode(UUID republicId);
+    
+    /**
+     * Regenera o código de convite da república com um código personalizado
+     */
+    Republic regenerateCodeWithCustomCode(UUID republicId, String customCode);
+    
+    /**
+     * Obtém o tamanho padrão do código de convite
+     */
+    int getCodeLength();
 }

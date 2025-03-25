@@ -212,4 +212,44 @@ public class RepublicServiceImpl implements RepublicServicePort {
 
         return republic;
     }
+
+    @Override
+    public Republic regenerateCode(UUID republicId) {
+        Republic republic = getRepublicById(republicId);
+        
+        // Gerar novo código único
+        String newCode = republicRepository.generateUniqueCode();
+        
+        // Atualizar o código da república usando o método do modelo
+        republic.updateCode(newCode);
+                
+        return republicRepository.save(republic);
+    }
+    
+    @Override
+    public Republic regenerateCodeWithCustomCode(UUID republicId, String customCode) {
+        Republic republic = getRepublicById(republicId);
+        
+        // Validar o formato do código personalizado
+        if (!republicRepository.isValidCodeFormat(customCode)) {
+            throw new ValidationException("O código personalizado deve ter " + 
+                republicRepository.getCodeLength() + 
+                " caracteres e conter apenas letras maiúsculas e números");
+        }
+        
+        // Verificar se o código já existe
+        if (republicRepository.existsByCode(customCode)) {
+            throw new ValidationException("O código personalizado já está em uso");
+        }
+        
+        // Atualizar o código da república
+        republic.updateCode(customCode);
+                
+        return republicRepository.save(republic);
+    }
+    
+    @Override
+    public int getCodeLength() {
+        return republicRepository.getCodeLength();
+    }
 }

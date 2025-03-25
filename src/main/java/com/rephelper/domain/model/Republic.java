@@ -109,4 +109,14 @@ public class Republic {
             this.updatedAt = LocalDateTime.now();
         }
     }
+
+    /**
+     * Atualiza o código de convite da república
+     */
+    public void updateCode(String newCode) {
+        if (newCode != null && !newCode.isBlank()) {
+            this.code = newCode;
+            this.updatedAt = LocalDateTime.now();
+        }
+    }
 }

@@ -101,4 +101,24 @@ public class RepublicJpaAdapter implements RepublicRepositoryPort {
 
         return code;
     }
+
+    @Override
+    public boolean isValidCodeFormat(String code) {
+        if (code == null || code.length() != CODE_LENGTH) {
+            return false;
+        }
+        
+        for (char c : code.toCharArray()) {
+            if (CHARS.indexOf(c) == -1) {
+                return false;
+            }
+        }
+        
+        return true;
+    }
+    
+    @Override
+    public int getCodeLength() {
+        return CODE_LENGTH;
+    }
 }

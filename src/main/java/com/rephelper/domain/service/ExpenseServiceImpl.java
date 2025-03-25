@@ -285,8 +285,8 @@ public class ExpenseServiceImpl implements ExpenseServicePort {
         if (expense.getCreator() != null) {
             notificationService.createNotification(
                     expense.getCreator().getId(),
-                    "Expense Reimbursed",
-                    "Your expense '" + expense.getDescription() + "' has been reimbursed",
+                    "Despesa Reembolsada",
+                    "Sua despesa '" + expense.getDescription() + "' foi reembolsada",
                     Notification.NotificationType.EXPENSE_REIMBURSED,
                     "expense",
                     expense.getId().toString()
@@ -302,8 +302,8 @@ public class ExpenseServiceImpl implements ExpenseServicePort {
                         (expense.getCreator() == null || !member.getId().equals(expense.getCreator().getId()))) {
                     notificationService.createNotification(
                             member.getId(),
-                            "Significant Expense Reimbursed",
-                            "An expense of " + expense.getAmount() + " for '" + expense.getDescription() + "' has been reimbursed",
+                            "Despesa Significativa Reembolsada",
+                            "Uma despesa de " + expense.getAmount() + " para '" + expense.getDescription() + "' foi reembolsada",
                             Notification.NotificationType.EXPENSE_REIMBURSED,
                             "expense",
                             expense.getId().toString()

@@ -177,4 +177,54 @@ public class TaskJpaAdapter implements TaskRepositoryPort {
         // Mapear os resultados para entidades de domínio
         return taskEntities.map(taskMapper::toDomainEntity);
     }
+
+    @Override
+    public List<Task> findTasksDueWithinNextDay() {
+        // Calcula a data/hora de 24 horas a partir de agora
+        LocalDateTime nextDay = LocalDateTime.now().plusHours(24);
+        
+        return taskJpaRepository.findTasksDueWithinNextDay(nextDay).stream()
+                .map(taskMapper::toDomainEntity)
+                .collect(Collectors.toList());
+    }
+    
+    @Override
+    public List<Task> findTasksDueInThreeDays() {
+        // Calcula o início e fim do período de 3 dias a partir de agora (dia 3)
+        LocalDateTime startDay = LocalDateTime.now().plusDays(2).withHour(23).withMinute(59).withSecond(59);
+        LocalDateTime endDay = LocalDateTime.now().plusDays(3).withHour(23).withMinute(59).withSecond(59);
+        
+        return taskJpaRepository.findTasksDueInThreeDays(startDay, endDay).stream()
+                .map(taskMapper::toDomainEntity)
+                .collect(Collectors.toList());
+    }
+    
+    @Override
+    public List<Task> findTasksOverdueMoreThanOneDay() {
+        // Calcula a data/hora de 24 horas atrás
+        LocalDateTime oneDayAgo = LocalDateTime.now().minusDays(1);
+        
+        return taskJpaRepository.findTasksOverdueMoreThanOneDay(oneDayAgo).stream()
+                .map(taskMapper::toDomainEntity)
+                .collect(Collectors.toList());
+    }
+    
+    @Override
+    public List<Task> findOverdueRecurringTasks() {
+        return taskJpaRepository.findOverdueRecurringTasks().stream()
+                .map(taskMapper::toDomainEntity)
+                .collect(Collectors.toList());
+    }
+    
+    @Override
+    public List<Task> findCompletedRecurringTasks() {
+        return taskJpaRepository.findCompletedRecurringTasks().stream()
+                .map(taskMapper::toDomainEntity)
+                .collect(Collectors.toList());
+    }
+    
+    @Override
+    public boolean existsByParentTaskId(Long parentTaskId) {
+        return taskJpaRepository.existsByParentTaskId(parentTaskId);
+    }
 }

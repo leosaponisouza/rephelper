@@ -79,4 +79,47 @@ public interface TaskRepositoryPort {
      * @return Página de tarefas
      */
     Page<Task> findAssignedWithFilters(UUID userId, TaskFilterRequest filter, Pageable pageable);
+    
+    /**
+     * Busca tarefas pendentes ou em progresso com prazo de vencimento nas próximas 24 horas
+     * 
+     * @return Lista de tarefas com prazo nas próximas 24 horas
+     */
+    List<Task> findTasksDueWithinNextDay();
+    
+    /**
+     * Busca tarefas pendentes ou em progresso com prazo de vencimento em 3 dias
+     * 
+     * @return Lista de tarefas com prazo em 3 dias
+     */
+    List<Task> findTasksDueInThreeDays();
+    
+    /**
+     * Busca tarefas pendentes ou em progresso que estão atrasadas há mais de 1 dia
+     * 
+     * @return Lista de tarefas atrasadas há mais de 1 dia
+     */
+    List<Task> findTasksOverdueMoreThanOneDay();
+    
+    /**
+     * Busca tarefas recorrentes vencidas que não foram concluídas
+     * 
+     * @return Lista de tarefas recorrentes vencidas
+     */
+    List<Task> findOverdueRecurringTasks();
+    
+    /**
+     * Busca tarefas recorrentes concluídas
+     * 
+     * @return Lista de tarefas recorrentes concluídas
+     */
+    List<Task> findCompletedRecurringTasks();
+    
+    /**
+     * Verifica se existe alguma tarefa com o ID pai especificado
+     * 
+     * @param parentTaskId ID da tarefa pai
+     * @return true se existe alguma tarefa filha, false caso contrário
+     */
+    boolean existsByParentTaskId(Long parentTaskId);
 }

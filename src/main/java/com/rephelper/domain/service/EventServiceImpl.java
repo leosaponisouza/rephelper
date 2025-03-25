@@ -5,22 +5,23 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import com.rephelper.domain.model.*;
+import com.rephelper.domain.port.in.NotificationServicePort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.rephelper.domain.exception.ForbiddenException;
 import com.rephelper.domain.exception.ResourceNotFoundException;
 import com.rephelper.domain.exception.ValidationException;
-import com.rephelper.domain.model.Event;
-import com.rephelper.domain.model.EventInvitation;
-import com.rephelper.domain.model.Republic;
-import com.rephelper.domain.model.User;
 import com.rephelper.domain.port.in.EventServicePort;
 import com.rephelper.domain.port.out.EventRepositoryPort;
 import com.rephelper.domain.port.out.RepublicRepositoryPort;
 import com.rephelper.domain.port.out.UserRepositoryPort;
 
 import lombok.RequiredArgsConstructor;
+
+import static com.rephelper.domain.model.Notification.NotificationType.EVENT_INVITATION;
+import static com.rephelper.domain.model.NotificationType.EVENT_CREATED;
 
 @Service
 @RequiredArgsConstructor
@@ -30,6 +31,7 @@ public class EventServiceImpl implements EventServicePort {
     private final EventRepositoryPort eventRepository;
     private final UserRepositoryPort userRepository;
     private final RepublicRepositoryPort republicRepository;
+    private final NotificationServicePort notificationService;
 
     @Override
     public Event createEvent(Event event, UUID creatorUserId) {
@@ -188,6 +190,16 @@ public class EventServiceImpl implements EventServicePort {
 
             // Use the new repository method that handles the entity relationships
             eventRepository.inviteUserToEvent(eventId, userId, Event.InvitationStatus.INVITED);
+            
+            // Enviar notificação de convite
+            notificationService.createNotification(
+                userId,
+                "Convite para evento: " + event.getTitle(),
+                inviter.getName() + " convidou você para o evento: " + event.getTitle(),
+                EVENT_INVITATION,
+                "event",
+                eventId.toString()
+            );
         }
 
         // Salvar evento com novos convites
@@ -227,7 +239,24 @@ public class EventServiceImpl implements EventServicePort {
         }
 
         // Salvar evento com status de convite atualizado
-        return eventRepository.save(event);
+        eventRepository.save(event);
+        
+        // Se o usuário confirmou presença, notificar o criador do evento
+        if (status == Event.InvitationStatus.CONFIRMED) {
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+                    
+            notificationService.createNotification(
+                event.getCreator().getId(),
+                "Confirmação de presença: " + event.getTitle(),
+                user.getName() + " confirmou presença no evento: " + event.getTitle(),
+                EVENT_INVITATION,
+                "event",
+                eventId.toString()
+            );
+        }
+
+        return event;
     }
 
     @Override

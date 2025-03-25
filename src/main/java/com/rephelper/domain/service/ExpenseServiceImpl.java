@@ -3,11 +3,9 @@ package com.rephelper.domain.service;
 import com.rephelper.domain.exception.ForbiddenException;
 import com.rephelper.domain.exception.ResourceNotFoundException;
 import com.rephelper.domain.exception.ValidationException;
-import com.rephelper.domain.model.Expense;
-import com.rephelper.domain.model.Republic;
-import com.rephelper.domain.model.RepublicFinances;
-import com.rephelper.domain.model.User;
+import com.rephelper.domain.model.*;
 import com.rephelper.domain.port.in.ExpenseServicePort;
+import com.rephelper.domain.port.in.NotificationServicePort;
 import com.rephelper.domain.port.in.RepublicFinancesServicePort;
 import com.rephelper.domain.port.out.ExpenseRepositoryPort;
 import com.rephelper.domain.port.out.RepublicRepositoryPort;
@@ -31,6 +29,7 @@ public class ExpenseServiceImpl implements ExpenseServicePort {
     private final UserRepositoryPort userRepository;
     private final RepublicRepositoryPort republicRepository;
     private final RepublicFinancesServicePort republicFinancesService;
+    private final NotificationServicePort notificationService;
 
     @Override
     public Expense createExpense(Expense expense, UUID creatorUserId) {
@@ -62,7 +61,22 @@ public class ExpenseServiceImpl implements ExpenseServicePort {
                 .createdAt(LocalDateTime.now())
                 .build();
 
-        return expenseRepository.save(expense);
+        Expense savedExpense = expenseRepository.save(expense);
+
+        // Notify republic admins about the new expense
+        List<User> republicMembers = userRepository.findByCurrentRepublicId(republic.getId());
+        for (User member : republicMembers) {
+            if (member.isRepublicAdmin() && !member.getId().equals(creatorUserId)) {
+                notificationService.notifyExpenseCreated(
+                        member.getId(),
+                        savedExpense.getId(),
+                        savedExpense.getDescription(),
+                        creatorUserId
+                );
+            }
+        }
+
+        return savedExpense;
     }
 
     @Override
@@ -185,8 +199,20 @@ public class ExpenseServiceImpl implements ExpenseServicePort {
         // Aprovar despesa
         expense.approve();
 
-        return expenseRepository.save(expense);
+        Expense approvedExpense = expenseRepository.save(expense);
+
+        // Notify the expense creator about the approval
+        if (expense.getCreator() != null) {
+            notificationService.notifyExpenseApproved(
+                    expense.getCreator().getId(),
+                    id,
+                    expense.getDescription()
+            );
+        }
+
+        return approvedExpense;
     }
+
 
     @Override
     public Expense rejectExpense(Long id, String reason, UUID rejecterId) {
@@ -209,7 +235,19 @@ public class ExpenseServiceImpl implements ExpenseServicePort {
         // Rejeitar despesa
         expense.reject(reason);
 
-        return expenseRepository.save(expense);
+        Expense rejectedExpense = expenseRepository.save(expense);
+
+        // Notify the expense creator about the rejection
+        if (expense.getCreator() != null) {
+            notificationService.notifyExpenseRejected(
+                    expense.getCreator().getId(),
+                    id,
+                    expense.getDescription(),
+                    reason
+            );
+        }
+
+        return rejectedExpense;
     }
 
     @Override
@@ -241,7 +279,40 @@ public class ExpenseServiceImpl implements ExpenseServicePort {
         // Atualizar finanças da república
         republicFinancesService.updateBalance(expense.getRepublic().getId(), expense.getAmount().negate());
 
-        return expenseRepository.save(expense);
+        Expense reimbursedExpense = expenseRepository.save(expense);
+
+        // Notify the expense creator about the reimbursement
+        if (expense.getCreator() != null) {
+            notificationService.createNotification(
+                    expense.getCreator().getId(),
+                    "Expense Reimbursed",
+                    "Your expense '" + expense.getDescription() + "' has been reimbursed",
+                    Notification.NotificationType.EXPENSE_REIMBURSED,
+                    "expense",
+                    expense.getId().toString()
+            );
+        }
+
+        // Notify all republic members about the significant expense
+        boolean isSignificantExpense = expense.getAmount().compareTo(new BigDecimal("100")) > 0;
+        if (isSignificantExpense) {
+            List<User> republicMembers = userRepository.findByCurrentRepublicId(expense.getRepublic().getId());
+            for (User member : republicMembers) {
+                if (!member.getId().equals(reimburser.getId()) &&
+                        (expense.getCreator() == null || !member.getId().equals(expense.getCreator().getId()))) {
+                    notificationService.createNotification(
+                            member.getId(),
+                            "Significant Expense Reimbursed",
+                            "An expense of " + expense.getAmount() + " for '" + expense.getDescription() + "' has been reimbursed",
+                            Notification.NotificationType.EXPENSE_REIMBURSED,
+                            "expense",
+                            expense.getId().toString()
+                    );
+                }
+            }
+        }
+
+        return reimbursedExpense;
     }
 
     @Override

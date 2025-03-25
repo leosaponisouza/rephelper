@@ -5,6 +5,7 @@ import java.util.function.Function;
 
 import javax.crypto.SecretKey;
 
+import com.rephelper.infrastructure.config.JwtProperties;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -32,7 +33,7 @@ public class JwtTokenProvider {
     private final String audience;
 
 
-    public JwtTokenProvider(com.rephelper.config.JwtProperties jwtProperties) {
+    public JwtTokenProvider(JwtProperties jwtProperties) {
         // If the existing secret is not long enough, generate a new secure key
         if (jwtProperties.getSecret() == null || jwtProperties.getSecret().length() < 64) {
             // Generate a secure key

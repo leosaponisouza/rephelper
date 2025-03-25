@@ -5,6 +5,8 @@ import java.util.UUID;
 
 import com.rephelper.application.dto.request.TaskFilterRequest;
 import com.rephelper.application.dto.request.UpdateTaskRequest;
+import com.rephelper.domain.model.NotificationType;
+import com.rephelper.domain.port.in.NotificationServicePort;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -30,6 +32,7 @@ public class TaskServiceImpl implements TaskServicePort {
     private final TaskRepositoryPort taskRepository;
     private final UserRepositoryPort userRepository;
     private final RepublicRepositoryPort republicRepository;
+    private final NotificationServicePort notificationService;
 
     @Override
     public Task createTask(Task task, UUID creatorUserId) {
@@ -53,11 +56,11 @@ public class TaskServiceImpl implements TaskServicePort {
             if (task.getRecurrenceType() == null) {
                 throw new ValidationException("Recurrence type is required for recurring tasks");
             }
-            
+
             if (task.getRecurrenceInterval() == null || task.getRecurrenceInterval() <= 0) {
                 throw new ValidationException("Recurrence interval must be a positive number");
             }
-            
+
             if (task.getDueDate() == null) {
                 throw new ValidationException("Due date is required for recurring tasks");
             }
@@ -66,8 +69,29 @@ public class TaskServiceImpl implements TaskServicePort {
         // Atualizar status baseado na data de vencimento
         task.updateStatus();
 
-        return taskRepository.save(task);
+        Task savedTask = taskRepository.save(task);
+
+        // Notify republic admins about the new task if it doesn't have assigned users yet
+        if (savedTask.getAssignedUsers() == null || savedTask.getAssignedUsers().isEmpty()) {
+            // Get republic admins
+            List<User> republicMembers = userRepository.findByCurrentRepublicId(task.getRepublic().getId());
+            for (User member : republicMembers) {
+                if (member.isRepublicAdmin() && !member.getId().equals(creatorUserId)) {
+                    notificationService.createNotification(
+                            member.getId(),
+                            "New Unassigned Task",
+                            "A new task '" + savedTask.getTitle() + "' was created and needs to be assigned",
+                            com.rephelper.domain.model.Notification.NotificationType.TASK_ASSIGNED,
+                            "task",
+                            savedTask.getId().toString()
+                    );
+                }
+            }
+        }
+
+        return savedTask;
     }
+
 
     @Override
     @Transactional(readOnly = true)
@@ -172,6 +196,7 @@ public class TaskServiceImpl implements TaskServicePort {
         return taskRepository.save(task);
     }
 
+
     @Override
     public Task completeTask(Long id, UUID userId) {
         Task task = getTaskById(id);
@@ -188,15 +213,59 @@ public class TaskServiceImpl implements TaskServicePort {
 
         // Completar tarefa
         task.complete();
-        
+
         // Salvar a tarefa atualizada
         Task completedTask = taskRepository.save(task);
-        
+
+        // Notify all users who were assigned to this task, except the one who completed it
+        if (task.getAssignedUsers() != null && !task.getAssignedUsers().isEmpty()) {
+            for (User assignedUser : task.getAssignedUsers()) {
+                if (!assignedUser.getId().equals(userId)) {
+                    notificationService.notifyTaskCompleted(
+                            assignedUser.getId(),
+                            id,
+                            task.getTitle(),
+                            userId
+                    );
+                }
+            }
+        }
+
+        // Notify republic admins about completed task
+        List<User> republicMembers = userRepository.findByCurrentRepublicId(task.getRepublic().getId());
+        for (User member : republicMembers) {
+            if (member.isRepublicAdmin() && !member.getId().equals(userId) &&
+                    (task.getAssignedUsers() == null || !task.getAssignedUsers().contains(member))) {
+                notificationService.createNotification(
+                        member.getId(),
+                        "Task Completed",
+                        "Task '" + task.getTitle() + "' has been completed by " + user.getName(),
+                        com.rephelper.domain.model.Notification.NotificationType.TASK_COMPLETED,
+                        "task",
+                        id.toString()
+                );
+            }
+        }
+
         // Se a tarefa for recorrente, criar a próxima instância
         if (task.isRecurring() && task.shouldContinueRecurrence()) {
             Task nextTask = task.createRecurringInstance();
             if (nextTask != null) {
-                taskRepository.save(nextTask);
+                Task newTask = taskRepository.save(nextTask);
+
+                // Notify assigned users about the new recurring task
+                if (newTask.getAssignedUsers() != null) {
+                    for (User assignedUser : newTask.getAssignedUsers()) {
+                        notificationService.createNotification(
+                                assignedUser.getId(),
+                                "New Recurring Task",
+                                "A new recurring task '" + newTask.getTitle() + "' has been created and assigned to you",
+                                com.rephelper.domain.model.Notification.NotificationType.TASK_ASSIGNED,
+                                "task",
+                                newTask.getId().toString()
+                        );
+                    }
+                }
             }
         }
 
@@ -244,6 +313,7 @@ public class TaskServiceImpl implements TaskServicePort {
         taskRepository.delete(task);
     }
 
+
     @Override
     public Task assignTaskToUser(Long taskId, UUID userId, UUID assignerUserId) {
         Task task = getTaskById(taskId);
@@ -275,7 +345,12 @@ public class TaskServiceImpl implements TaskServicePort {
         // Atribuir tarefa
         task.assignTo(userToAssign);
 
-        return taskRepository.save(task);
+        Task savedTask = taskRepository.save(task);
+
+        // Send notification to the assigned user
+        notificationService.notifyTaskAssigned(userId, taskId, task.getTitle());
+
+        return savedTask;
     }
 
     @Override

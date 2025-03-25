@@ -1,4 +1,4 @@
-package com.rephelper.config; // Put this in a suitable package
+package com.rephelper.infrastructure.config; // Put this in a suitable package
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;

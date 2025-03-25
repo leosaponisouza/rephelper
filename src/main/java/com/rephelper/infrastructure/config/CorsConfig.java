@@ -1,4 +1,4 @@
-package com.rephelper.config;
+package com.rephelper.infrastructure.config;
 
 import java.util.List;
 

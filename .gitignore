@@ -18,7 +18,7 @@ target/
 *.iws
 *.iml
 *.ipr
-.env
+
 ### NetBeans ###
 /nbproject/private/
 /nbbuild/
@@ -31,3 +31,26 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Env Files ###
+.env
+.env.local
+.env.development
+.env.production
+.env.test
+
+### Logs ###
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+### System Files ###
+.DS_Store
+Thumbs.db
+
+### Production builds ###
+/build/
+/dist/
+/out/

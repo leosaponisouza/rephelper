@@ -30,11 +30,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
         try {
             String path = request.getRequestURI();
-            log.debug("JwtAuthenticationFilter: processando requisição para {}", path);
+            String method = request.getMethod();
+            log.debug("JwtAuthenticationFilter: processando requisição {} {}", method, path);
             
-            // Verificar se é um endpoint do Actuator
-            if (path.startsWith("/api/v1/actuator")) {
-                log.debug("JwtAuthenticationFilter: pulando autenticação para endpoint do Actuator: {}", path);
+            // Verificar se é um endpoint do Actuator ou permitidos sem autenticação
+            if (isPermittedWithoutAuth(path)) {
+                log.debug("JwtAuthenticationFilter: pulando autenticação para endpoint permitido: {}", path);
                 filterChain.doFilter(request, response);
                 return;
             }
@@ -42,28 +43,36 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String jwt = getJwtFromRequest(request);
 
             if (StringUtils.hasText(jwt)) {
-                // Verificar se é um endpoint de login (que aceita token Firebase)
-                if (path.endsWith("/auth/login") || path.endsWith("/auth/logout") || path.endsWith("/users")) {
-                    log.debug("JwtAuthenticationFilter: pulando validação JWT para endpoint: {}", path);
+                log.debug("JwtAuthenticationFilter: validando JWT para {} {}", method, path);
+                if (tokenProvider.validateToken(jwt)) {
+                    Authentication authentication = tokenProvider.getAuthentication(jwt);
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                    log.debug("JwtAuthenticationFilter: autenticação bem-sucedida para {} {}", method, path);
                 } else {
-                    // Para outros endpoints, validar como um JWT normal
-                    log.debug("JwtAuthenticationFilter: validando JWT para {}", path);
-                    if (tokenProvider.validateToken(jwt)) {
-                        Authentication authentication = tokenProvider.getAuthentication(jwt);
-                        SecurityContextHolder.getContext().setAuthentication(authentication);
-                        log.debug("JwtAuthenticationFilter: autenticação bem-sucedida para {}", path);
-                    } else {
-                        log.warn("JwtAuthenticationFilter: token inválido para {}", path);
-                    }
+                    log.warn("JwtAuthenticationFilter: token inválido ou expirado para {} {}", method, path);
                 }
             } else {
-                log.debug("JwtAuthenticationFilter: nenhum token JWT encontrado para {}", path);
+                log.debug("JwtAuthenticationFilter: nenhum token JWT encontrado para {} {}", method, path);
             }
         } catch (Exception e) {
             log.error("JwtAuthenticationFilter: erro ao processar autenticação: {}", e.getMessage(), e);
+            SecurityContextHolder.clearContext();
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    /**
+     * Verifica se o caminho pode ser acessado sem autenticação
+     */
+    private boolean isPermittedWithoutAuth(String path) {
+        return path.startsWith("/api/v1/actuator") || 
+               path.endsWith("/auth/login") || 
+               path.endsWith("/auth/signup") || 
+               path.endsWith("/auth/refresh") ||
+               path.endsWith("/users") ||
+               path.contains("/health") ||
+               path.contains("/system/status");
     }
 
     /**

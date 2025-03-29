@@ -17,6 +17,9 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.SignatureException;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -128,9 +131,19 @@ public class JwtTokenProvider {
     public boolean validateToken(String token) {
         try {
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token); // Use parserBuilder
-            return !isTokenExpired(token);
+            if (isTokenExpired(token)) {
+                log.warn("JWT token expirado");
+                return false;
+            }
+            return true;
+        } catch (ExpiredJwtException e) {
+            log.error("JWT token expirou: {}", e.getMessage());
+            return false;
+        } catch (MalformedJwtException | SignatureException e) {
+            log.error("JWT token inválido: {}", e.getMessage());
+            return false;
         } catch (Exception e) {
-            log.error("JWT validation error: {}", e.getMessage());
+            log.error("Erro na validação JWT: {}", e.getMessage());
             return false;
         }
     }

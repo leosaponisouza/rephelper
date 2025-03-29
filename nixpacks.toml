@@ -1,5 +1,5 @@
 [phases.setup]
-nixPkgs = ['...' ,'openjdk21']
+nixPkgs = ['openjdk21']
 
 [phases.build]
 cmds = [

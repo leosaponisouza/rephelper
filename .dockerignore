@@ -1,0 +1,42 @@
+# Git
+.git
+.github
+.gitignore
+
+# Arquivos de build
+target/
+!target/*.jar
+
+# Logs
+logs/
+*.log
+
+# Arquivos temporários
+tmp/
+*.tmp
+*.bak
+
+# Arquivos de IDE
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+.classpath
+.project
+.settings/
+
+# Arquivos de configuração local
+.env
+.env.local
+
+# Arquivos Railway/Deploy
+railway.toml
+nixpacks.toml
+.railway.json
+
+# Outros
+README.md
+LICENSE
+*.md
+node_modules/ 

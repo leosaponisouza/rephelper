@@ -29,9 +29,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     
     // Lista de caminhos públicos que não requerem autenticação
     private static final List<String> PUBLIC_PATHS = Arrays.asList(
-        "/api/v1/auth/login",
-        "/api/v1/auth/signup",
-        "/api/v1/auth/refresh",
+        "/api/v1/auth/**", // Usando wildcard para todos os endpoints de autenticação
         "/auth/login",
         "/api/v1/users",
         "/api/v1/health",

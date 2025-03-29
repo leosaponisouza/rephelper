@@ -87,6 +87,9 @@ public class SecurityConfig {
                     }
                 });
                 
+                // Permitir OPTIONS para todos os endpoints (para CORS preflight)
+                authorize.requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll();
+                
                 // Exigir autenticação para todos os outros caminhos
                 authorize.anyRequest().authenticated();
                 log.info("Configuração de autorização concluída");
@@ -104,8 +107,10 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(Arrays.asList("*"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(Arrays.asList("authorization", "content-type", "x-auth-token"));
+        configuration.setAllowedHeaders(Arrays.asList("authorization", "content-type", "x-auth-token", "x-requested-with", "accept", "origin"));
         configuration.setExposedHeaders(Arrays.asList("authorization"));
+        configuration.setAllowCredentials(false);
+        configuration.setMaxAge(3600L);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;

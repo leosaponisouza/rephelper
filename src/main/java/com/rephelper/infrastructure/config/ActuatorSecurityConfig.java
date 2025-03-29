@@ -8,22 +8,25 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
 
+import lombok.extern.slf4j.Slf4j;
+
 @Configuration
+@Slf4j
 public class ActuatorSecurityConfig {
 
     @Bean
     @Order(1) // Ordem mais alta que o SecurityFilterChain padrão
     public SecurityFilterChain actuatorSecurityFilterChain(HttpSecurity http) throws Exception {
+        log.info("Configurando segurança específica para endpoints do Actuator");
+        
         http
             .securityMatcher("/api/v1/actuator/**")
             .authorizeHttpRequests(authorize -> authorize
-                .requestMatchers("/api/v1/actuator/health/**").permitAll()
-                .requestMatchers("/api/v1/actuator/info").permitAll()
-                .requestMatchers("/api/v1/actuator/metrics/**").permitAll()
-                .anyRequest().authenticated()
+                .anyRequest().permitAll() // Permitir acesso a todos os endpoints do Actuator sem autenticação
             )
             .csrf(AbstractHttpConfigurer::disable);
         
+        log.info("Configuração de segurança para Actuator concluída");
         return http.build();
     }
 } 

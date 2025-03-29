@@ -13,7 +13,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
-@RequestMapping("api/v1/health")
+@RequestMapping("/api/v1/health")
 @Tag(name = "Health", description = "Health check endpoints")
 public class HealthController {
 
@@ -22,7 +22,7 @@ public class HealthController {
     public ResponseEntity<Map<String, Object>> healthCheck() {
         Map<String, Object> response = new HashMap<>();
         response.put("status", "UP");
-        response.put("timestamp", LocalDateTime.now().toString());
+        response.put("message", "Service is running");
         return ResponseEntity.ok(response);
     }
 

@@ -3,7 +3,6 @@ builder = "NIXPACKS"
 
 [deploy]
 startCommand = "java -jar target/*.jar --spring.profiles.active=prod"
-healthcheckPath = "/debug/info"
 healthcheckTimeout = 300
 
 [vars]

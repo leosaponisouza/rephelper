@@ -1,0 +1,26 @@
+FROM eclipse-temurin:21-jdk-alpine
+
+# Instalar ferramentas necessárias
+RUN apk add --no-cache curl wget
+
+# Definir diretório de trabalho
+WORKDIR /app
+
+# Copiar todo o projeto
+COPY . .
+
+# Dar permissão de execução ao mvnw
+RUN chmod +x ./mvnw
+
+# Limpar build anterior, compilar e verificar o JAR
+RUN ./mvnw clean package -DskipTests && \
+    echo "Arquivos gerados:" && \
+    ls -la target && \
+    echo "JARs encontrados:" && \
+    find target -name "*.jar" -type f | xargs ls -la
+
+# Expor a porta
+EXPOSE 8080
+
+# Comando para iniciar a aplicação
+CMD java -jar $(find target -name "*.jar" -not -name "*sources.jar" -not -name "*javadoc.jar" | head -1) --spring.profiles.active=prod 

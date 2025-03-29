@@ -1,9 +1,6 @@
 [build]
-builder = "NIXPACKS"
-
-[deploy]
-startCommand = "java -jar target/*.jar --spring.profiles.active=prod"
-healthcheckTimeout = 300
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile.simple"
 
 [vars]
 SPRING_PROFILES_ACTIVE = "prod" 

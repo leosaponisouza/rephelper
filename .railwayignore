@@ -1,0 +1,26 @@
+# Arquivos de desenvolvimento
+.git
+.github
+.idea
+.vscode
+*.iml
+*.iws
+*.ipr
+
+# Arquivos de compilação
+target/
+!target/*.jar
+node_modules/
+.mvn/wrapper
+
+# Logs
+logs/
+*.log
+
+# Arquivos temporários
+tmp/
+temp/
+
+# Arquivos de teste
+src/test/
+**/test/ 

@@ -23,6 +23,8 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Arrays;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Value;
+
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
@@ -40,6 +42,7 @@ public class SecurityConfig {
         "/api/v1/users",
         "/api/v1/health/**",
         "/api/v1/system/status",
+        "/debug/**", // Endpoint temporário para diagnóstico
         "/api-docs/**",
         "/swagger-ui/**",
         "/swagger-ui.html",
@@ -53,7 +56,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, CorsConfigurationSource corsConfigurationSource) throws Exception {
         log.info("Configurando SecurityFilterChain");
         
         http
@@ -61,7 +64,7 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable)
             
             // Configurar CORS
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .cors(cors -> cors.configurationSource(corsConfigurationSource))
             
             // Configurar tratamento de exceções
             .exceptionHandling(exception -> exception
@@ -103,16 +106,25 @@ public class SecurityConfig {
     }
     
     @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
+    public CorsConfigurationSource corsConfigurationSource(
+            @Value("${cors.allowed-origins:*}") String[] allowedOrigins,
+            @Value("${cors.allowed-methods:GET,POST,PUT,DELETE,OPTIONS,PATCH}") String[] allowedMethods,
+            @Value("${cors.allowed-headers:Authorization,Content-Type,X-Requested-With,Accept,Origin,x-auth-token}") String[] allowedHeaders,
+            @Value("${cors.max-age:3600}") long maxAge) {
+        
+        log.info("Configurando CORS com origens permitidas: {}", Arrays.toString(allowedOrigins));
+        
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("*"));
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(Arrays.asList("authorization", "content-type", "x-auth-token", "x-requested-with", "accept", "origin"));
-        configuration.setExposedHeaders(Arrays.asList("authorization"));
+        configuration.setAllowedOrigins(Arrays.asList(allowedOrigins));
+        configuration.setAllowedMethods(Arrays.asList(allowedMethods));
+        configuration.setAllowedHeaders(Arrays.asList(allowedHeaders));
+        configuration.setExposedHeaders(Arrays.asList("Authorization"));
         configuration.setAllowCredentials(false);
-        configuration.setMaxAge(3600L);
+        configuration.setMaxAge(maxAge);
+        
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
+        
         return source;
     }
 }

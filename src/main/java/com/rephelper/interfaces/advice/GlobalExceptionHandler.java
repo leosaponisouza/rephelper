@@ -214,6 +214,72 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Trata exceções de router não encontrado
+     */
+    @ExceptionHandler(org.springframework.web.servlet.NoHandlerFoundException.class)
+    public ResponseEntity<ErrorResponse> handleNoHandlerFoundException(
+            org.springframework.web.servlet.NoHandlerFoundException ex, WebRequest request) {
+        
+        log.error("Endpoint não encontrado: {} {}", ex.getHttpMethod(), ex.getRequestURL());
+        
+        Map<String, Object> details = new HashMap<>();
+        details.put("requestMethod", ex.getHttpMethod());
+        details.put("requestURL", ex.getRequestURL());
+        
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .status("NOT_FOUND")
+                .message("Endpoint não encontrado: " + ex.getRequestURL())
+                .timestamp(getCurrentTimestamp())
+                .path(getRequestPath(request))
+                .details(details)
+                .build();
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+    }
+    
+    /**
+     * Trata exceções de requisição mal formada
+     */
+    @ExceptionHandler(org.springframework.web.HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<ErrorResponse> handleMethodNotSupportedException(
+            org.springframework.web.HttpRequestMethodNotSupportedException ex, WebRequest request) {
+        
+        log.error("Método HTTP não suportado: {}", ex.getMessage());
+        
+        Map<String, Object> details = new HashMap<>();
+        details.put("supportedMethods", ex.getSupportedMethods());
+        
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .status("METHOD_NOT_ALLOWED")
+                .message("Método HTTP não suportado: " + ex.getMethod())
+                .timestamp(getCurrentTimestamp())
+                .path(getRequestPath(request))
+                .details(details)
+                .build();
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.METHOD_NOT_ALLOWED);
+    }
+    
+    /**
+     * Trata exceções de requisição inválida
+     */
+    @ExceptionHandler(org.springframework.web.HttpMediaTypeNotSupportedException.class)
+    public ResponseEntity<ErrorResponse> handleMediaTypeNotSupportedException(
+            org.springframework.web.HttpMediaTypeNotSupportedException ex, WebRequest request) {
+        
+        log.error("Tipo de conteúdo não suportado: {}", ex.getMessage());
+        
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .status("UNSUPPORTED_MEDIA_TYPE")
+                .message("Tipo de conteúdo não suportado: " + ex.getContentType())
+                .timestamp(getCurrentTimestamp())
+                .path(getRequestPath(request))
+                .build();
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.UNSUPPORTED_MEDIA_TYPE);
+    }
+
+    /**
      * Trata todas as outras exceções não mapeadas
      */
     @ExceptionHandler(Exception.class)

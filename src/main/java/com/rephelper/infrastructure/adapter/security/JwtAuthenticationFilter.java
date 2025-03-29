@@ -34,6 +34,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         "/api/v1/users",
         "/api/v1/health",
         "/api/v1/system/status",
+        "/debug/**",   // Adicionar caminho de debug temporário
         "/api-docs",
         "/swagger-ui",
         "/actuator"

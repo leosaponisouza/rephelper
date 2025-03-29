@@ -2,10 +2,6 @@
 builder = "DOCKERFILE"
 dockerfilePath = "Dockerfile.simple"
 
-[deploy]
-healthcheckPath = "/debug/info"
-healthcheckTimeout = 300
-
 [vars]
 SPRING_PROFILES_ACTIVE = "prod"
 DB_HOST = "${{Secrets.DB_HOST}}"

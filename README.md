@@ -166,21 +166,4 @@ A aplicação utiliza Spring Boot Actuator para monitoramento em produção.
 Endpoints disponíveis:
 - /api/v1/actuator/health - Status da aplicação
 - /api/v1/actuator/info - Informações sobre a aplicação
-- /api/v1/actuator/metrics - Métricas da aplicação
-
-# Configurações de pool de conexões para evitar desconexões
-spring.datasource.hikari.connection-timeout=30000
-spring.datasource.hikari.maximum-pool-size=10
-spring.datasource.hikari.minimum-idle=5
-spring.datasource.hikari.idle-timeout=120000
-spring.datasource.hikari.max-lifetime=1800000
-spring.datasource.hikari.auto-commit=true
-spring.datasource.hikari.connection-test-query=SELECT 1
-spring.datasource.hikari.validation-timeout=3000
-spring.datasource.hikari.keepalive-time=60000
-
-# Configurações básicas de pool de conexões para ambiente de desenvolvimento
-spring.datasource.hikari.connection-timeout=20000
-spring.datasource.hikari.maximum-pool-size=5
-spring.datasource.hikari.keepalive-time=30000
-spring.datasource.hikari.connection-test-query=SELECT 1 
+- /api/v1/actuator/metrics - Métricas da aplicação 

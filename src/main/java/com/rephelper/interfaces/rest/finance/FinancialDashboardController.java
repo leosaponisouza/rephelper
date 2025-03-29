@@ -32,7 +32,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("api/v1/financial-dashboard")
+@RequestMapping("/api/v1/financial-dashboard")
 @RequiredArgsConstructor
 @Tag(name = "Financial Dashboard", description = "Financial dashboard endpoints providing summary and analytics")
 public class FinancialDashboardController {

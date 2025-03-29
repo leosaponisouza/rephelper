@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("api/v1/budgetplans")
+@RequestMapping("/api/v1/budgetplans")
 @RequiredArgsConstructor
 @Tag(name = "Budget Plans", description = "Budget plan management endpoints")
 public class BudgetPlanController {

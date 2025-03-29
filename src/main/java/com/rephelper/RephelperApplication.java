@@ -1,13 +1,16 @@
-package com.rephelper;// In your main application class (RephelperApplication)
+package com.rephelper;
+
 import com.rephelper.infrastructure.config.JwtProperties;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.web.servlet.ServletComponentScan;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
-@EnableScheduling // Habilita o agendamento de tarefas// Add this line
+@EnableScheduling
 @EnableConfigurationProperties(JwtProperties.class)
+@ServletComponentScan
 public class RephelperApplication {
 
 	public static void main(String[] args) {

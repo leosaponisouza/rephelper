@@ -43,7 +43,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("api/v1/republics")
+@RequestMapping("/api/v1/republics")
 @RequiredArgsConstructor
 @Tag(name = "Republics", description = "Republic management endpoints")
 public class RepublicController {

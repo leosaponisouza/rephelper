@@ -98,7 +98,7 @@ public class AuthController {
             log.info("Solicitação de refresh de token recebida");
             
             // Get user ID from token without checking expiration
-            UUID userId = jwtTokenProvider.getUserIdFromToken(request.getToken());
+            UUID userId = jwtTokenProvider.getUserIdFromExpiredToken(request.getToken());
             log.info("ID do usuário extraído do token: {}", userId);
             
             // Get user

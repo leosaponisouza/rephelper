@@ -36,7 +36,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("api/v1/events")
+@RequestMapping("/api/v1/events")
 @RequiredArgsConstructor
 @Tag(name = "Events", description = "Event management endpoints")
 public class EventController {

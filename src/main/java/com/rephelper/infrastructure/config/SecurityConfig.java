@@ -9,7 +9,9 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import com.rephelper.infrastructure.adapter.security.JwtAuthenticationEntryPoint;
 import com.rephelper.infrastructure.adapter.security.JwtAuthenticationFilter;
@@ -17,6 +19,9 @@ import com.rephelper.infrastructure.adapter.security.JwtAuthenticationFilter;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.Arrays;
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -27,12 +32,24 @@ public class SecurityConfig {
 
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    
+    // Lista de caminhos públicos que não requerem autenticação
+    private static final List<String> PUBLIC_PATHS = Arrays.asList(
+        "/api/v1/auth/**",
+        "/auth/login",
+        "/api/v1/users",
+        "/api/v1/health/**",
+        "/api/v1/system/status",
+        "/api-docs/**",
+        "/swagger-ui/**",
+        "/swagger-ui.html",
+        "/actuator/**"
+    );
 
     @PostConstruct
     public void init() {
         log.info("Inicializando configuração de segurança");
-        log.info("URLs públicas configuradas: /api/v1/auth/**, /api/v1/users, /api/v1/health/**, /api/v1/system/status");
-        log.info("URLs do Actuator configuradas como públicas: /api/v1/actuator/**");
+        log.info("Caminhos públicos configurados: {}", PUBLIC_PATHS);
     }
 
     @Bean
@@ -40,32 +57,57 @@ public class SecurityConfig {
         log.info("Configurando SecurityFilterChain");
         
         http
-                .csrf(AbstractHttpConfigurer::disable)
-                .cors(AbstractHttpConfigurer::disable)
-                .exceptionHandling(exception -> exception
-                        .authenticationEntryPoint(jwtAuthenticationEntryPoint)
-                )
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                )
-                .authorizeHttpRequests(authorize -> {
-                    log.info("Configurando regras de autorização HTTP");
-                    authorize
-                        .requestMatchers(new AntPathRequestMatcher("/api/v1/actuator/**")).permitAll()
-                        .requestMatchers(new AntPathRequestMatcher("/api/v1/auth/**")).permitAll()
-                        .requestMatchers(new AntPathRequestMatcher("/auth/**")).permitAll()
-                        .requestMatchers(new AntPathRequestMatcher("/api/v1/users")).permitAll()
-                        .requestMatchers(new AntPathRequestMatcher("/api/v1/health/**")).permitAll()
-                        .requestMatchers(new AntPathRequestMatcher("/api/v1/system/status")).permitAll()
-                        .requestMatchers(new AntPathRequestMatcher("/api-docs/**")).permitAll()
-                        .requestMatchers(new AntPathRequestMatcher("/swagger-ui/**")).permitAll()
-                        .requestMatchers(new AntPathRequestMatcher("/swagger-ui.html")).permitAll()
-                        .anyRequest().authenticated();
-                    log.info("Configuração de URLs concluída");
-                })
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+            // Desabilitar CSRF para APIs RESTful
+            .csrf(AbstractHttpConfigurer::disable)
+            
+            // Configurar CORS
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            
+            // Configurar tratamento de exceções
+            .exceptionHandling(exception -> exception
+                .authenticationEntryPoint(jwtAuthenticationEntryPoint)
+            )
+            
+            // Configurar gerenciamento de sessão
+            .sessionManagement(session -> session
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            )
+            
+            // Configurar regras de autorização
+            .authorizeHttpRequests(authorize -> {
+                log.info("Configurando regras de autorização HTTP");
+                
+                // Permitir acesso a caminhos públicos
+                PUBLIC_PATHS.forEach(path -> {
+                    try {
+                        authorize.requestMatchers(path).permitAll();
+                        log.info("Permitindo acesso a: {}", path);
+                    } catch (Exception e) {
+                        log.error("Erro ao configurar caminho público: {}", path, e);
+                    }
+                });
+                
+                // Exigir autenticação para todos os outros caminhos
+                authorize.anyRequest().authenticated();
+                log.info("Configuração de autorização concluída");
+            })
+            
+            // Adicionar filtro JWT antes do filtro de autenticação padrão
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         log.info("Configuração de segurança concluída");
         return http.build();
+    }
+    
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(Arrays.asList("*"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(Arrays.asList("authorization", "content-type", "x-auth-token"));
+        configuration.setExposedHeaders(Arrays.asList("authorization"));
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
 }

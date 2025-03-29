@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("api/v1/notifications")
+@RequestMapping("/api/v1/notifications")
 @RequiredArgsConstructor
 @Tag(name = "Notifications", description = "Notification management endpoints")
 public class NotificationController {

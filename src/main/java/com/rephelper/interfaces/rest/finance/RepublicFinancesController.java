@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("api/v1/finances")
+@RequestMapping("/api/v1/finances")
 @RequiredArgsConstructor
 @Tag(name = "Republic Finances", description = "Republic finances management endpoints")
 public class RepublicFinancesController {

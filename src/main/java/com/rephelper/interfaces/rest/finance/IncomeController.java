@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("api/v1/incomes")
+@RequestMapping("/api/v1/incomes")
 @RequiredArgsConstructor
 @Tag(name = "Incomes", description = "Income management endpoints")
 public class IncomeController {

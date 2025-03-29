@@ -112,17 +112,36 @@ public class JwtTokenProvider {
     private Claims getAllClaimsFromToken(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(key)  // Use the SecretKey here
+                .setAllowedClockSkewSeconds(30) // Permite 30 segundos de diferença
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
     }
 
     /**
+     * Obtém o ID do usuário a partir do token mesmo que esteja expirado
+     */
+    public UUID getUserIdFromExpiredToken(String token) {
+        try {
+            return getUserIdFromToken(token);
+        } catch (ExpiredJwtException e) {
+            // Se o token estiver expirado, ainda podemos extrair o subject
+            String id = e.getClaims().getSubject();
+            return UUID.fromString(id);
+        }
+    }
+
+    /**
      * Verifica se o token expirou
      */
     private Boolean isTokenExpired(String token) {
-        final Date expiration = getExpirationDateFromToken(token);
-        return expiration.before(new Date());
+        try {
+            final Date expiration = getExpirationDateFromToken(token);
+            // Adiciona tolerância de 30 segundos (adicionando ao invés de subtrair)
+            return expiration.before(new Date(System.currentTimeMillis()));
+        } catch (ExpiredJwtException e) {
+            return true;
+        }
     }
 
     /**
@@ -130,11 +149,13 @@ public class JwtTokenProvider {
      */
     public boolean validateToken(String token) {
         try {
-            Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token); // Use parserBuilder
-            if (isTokenExpired(token)) {
-                log.warn("JWT token expirado");
-                return false;
-            }
+            Jwts.parserBuilder()
+                .setSigningKey(key)
+                .setAllowedClockSkewSeconds(30) // Permite 30 segundos de diferença
+                .build()
+                .parseClaimsJws(token);
+            
+            // O parseClaimsJws já verifica a expiração com o clock skew configurado
             return true;
         } catch (ExpiredJwtException e) {
             log.error("JWT token expirou: {}", e.getMessage());

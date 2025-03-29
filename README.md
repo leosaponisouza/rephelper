@@ -89,39 +89,6 @@ chmod +x build-prod.sh
 java -jar -Dspring.profiles.active=prod target/rephelper-0.0.1-SNAPSHOT.jar
 ```
 
-## Deploy usando Docker
-
-### Usando Docker Compose (recomendado)
-```bash
-# Construir e iniciar os containers
-docker-compose up -d
-
-# Verificar logs
-docker-compose logs -f app
-
-# Parar os containers
-docker-compose down
-```
-
-### Usando Docker diretamente
-```bash
-# Construir a imagem
-docker build -t rephelper:latest .
-
-# Executar o container
-docker run -p 8080:8080 \
-  -e SPRING_PROFILES_ACTIVE=prod \
-  -e DB_HOST=seu-host \
-  -e DB_PORT=5432 \
-  -e DB_NAME=rephelper \
-  -e DB_USER=seu-usuario \
-  -e DB_PASSWORD=sua-senha \
-  -e JWT_SECRET=seu-segredo \
-  -e JWT_EXPIRES_IN=86400000 \
-  -e CORS_ALLOWED_ORIGINS=https://rephelper.com \
-  rephelper:latest
-```
-
 ## Deploy em Serviços PaaS
 
 ### Heroku

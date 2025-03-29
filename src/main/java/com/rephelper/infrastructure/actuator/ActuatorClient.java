@@ -23,10 +23,14 @@ public class ActuatorClient {
             try {
                 log.info("Testando acesso ao endpoint de saúde do Actuator...");
                 RestTemplate restTemplate = new RestTemplate();
-                String baseUrl = "http://localhost:3000"; // Porta de desenvolvimento
+                String serverPort = "3000"; // Porta de desenvolvimento
+                
+                // Acessar o caminho padrão do Actuator
+                String actuatorUrl = "http://localhost:" + serverPort + "/actuator/health";
+                log.info("Tentando acessar: {}", actuatorUrl);
                 
                 String response = restTemplate.getForObject(
-                    baseUrl + "/api/v1/actuator/health", 
+                    actuatorUrl, 
                     String.class
                 );
                 

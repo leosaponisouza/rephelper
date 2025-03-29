@@ -35,10 +35,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             
             // Verificar se é um endpoint do Actuator ou permitidos sem autenticação
             if (isPermittedWithoutAuth(path)) {
-                log.debug("JwtAuthenticationFilter: pulando autenticação para endpoint permitido: {}", path);
+                log.info("JwtAuthenticationFilter: permitindo acesso sem autenticação para: {} {}", method, path);
                 filterChain.doFilter(request, response);
                 return;
             }
+            
+            log.info("JwtAuthenticationFilter: autenticação requerida para: {} {}", method, path);
             
             String jwt = getJwtFromRequest(request);
 
@@ -50,9 +52,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     log.debug("JwtAuthenticationFilter: autenticação bem-sucedida para {} {}", method, path);
                 } else {
                     log.warn("JwtAuthenticationFilter: token inválido ou expirado para {} {}", method, path);
+                    SecurityContextHolder.clearContext();
                 }
             } else {
-                log.debug("JwtAuthenticationFilter: nenhum token JWT encontrado para {} {}", method, path);
+                log.warn("JwtAuthenticationFilter: nenhum token JWT encontrado para {} {} - Autenticação necessária", method, path);
+                // Não limpar o contexto aqui, deixe o fluxo continuar e o EntryPoint lidar com isso
             }
         } catch (Exception e) {
             log.error("JwtAuthenticationFilter: erro ao processar autenticação: {}", e.getMessage(), e);
@@ -66,13 +70,25 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
      * Verifica se o caminho pode ser acessado sem autenticação
      */
     private boolean isPermittedWithoutAuth(String path) {
-        return path.startsWith("/api/v1/actuator") || 
-               path.endsWith("/auth/login") || 
-               path.endsWith("/auth/signup") || 
-               path.endsWith("/auth/refresh") ||
-               path.endsWith("/users") ||
-               path.contains("/health") ||
-               path.contains("/system/status");
+        // Opção específica para depuração - permitir todas as rotas de autenticação com qualquer path
+        if (path.contains("/auth/login") || path.contains("/login") || 
+            path.contains("/auth/signup") || path.contains("/signup") ||
+            path.contains("/auth/refresh") || path.contains("/refresh")) {
+            log.info("Permitindo acesso para rota de autenticação: {}", path);
+            return true;
+        }
+        
+        boolean permitido = path.startsWith("/api/v1/actuator") || 
+               path.startsWith("/api/v1/auth") || 
+               path.equals("/api/v1/users") ||
+               path.startsWith("/api/v1/health") ||
+               path.equals("/api/v1/system/status") ||
+               path.startsWith("/api-docs") ||
+               path.startsWith("/swagger-ui") ||
+               path.equals("/swagger-ui.html");
+        
+        log.info("Rota {} está {}permitida sem autenticação", path, permitido ? "" : "NÃO ");
+        return permitido;
     }
 
     /**

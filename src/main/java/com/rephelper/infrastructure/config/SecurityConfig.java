@@ -49,9 +49,11 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(authorize -> {
+                    log.info("Configurando regras de autorização HTTP");
                     authorize
                         .requestMatchers(new AntPathRequestMatcher("/api/v1/actuator/**")).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/api/v1/auth/**")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/auth/**")).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/api/v1/users")).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/api/v1/health/**")).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/api/v1/system/status")).permitAll()

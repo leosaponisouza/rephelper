@@ -46,7 +46,7 @@ public class AuthController {
     @Operation(summary = "Login with Firebase token", description = "Authenticates user with Firebase token and returns JWT token")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest loginRequest) {
         try {
-            log.info("Tentativa de login recebida");
+            log.info("Tentativa de login recebida no controlador");
             
             // Verify Firebase token
             String firebaseUid = firebaseAuthAdapter.verifyToken(loginRequest.getFirebaseToken());

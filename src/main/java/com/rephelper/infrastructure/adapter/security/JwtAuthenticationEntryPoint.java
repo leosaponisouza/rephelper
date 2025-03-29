@@ -19,10 +19,14 @@ public class JwtAuthenticationEntryPoint implements org.springframework.security
             throws IOException, ServletException {
 
         log.error("Unauthorized error: {}", authException.getMessage());
+        log.debug("Requisição não autenticada para: {} {}", request.getMethod(), request.getRequestURI());
 
         response.setContentType("application/json");
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-        response.getWriter().write("{\"status\":\"error\",\"message\":\"Unauthorized: " +
-                authException.getMessage() + "\"}");
+        
+        // Mensagem amigável para o cliente
+        String mensagem = "Autenticação necessária para acessar este recurso. Por favor, faça login novamente.";
+        
+        response.getWriter().write("{\"status\":\"error\",\"code\":401,\"message\":\"" + mensagem + "\"}");
     }
 }

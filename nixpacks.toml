@@ -1,0 +1,11 @@
+[phases.setup]
+nixPkgs = ['...' ,'openjdk21']
+
+[phases.build]
+cmds = [
+  "chmod +x ./mvnw",
+  "./mvnw clean package -DskipTests"
+]
+
+[start]
+cmd = "java -jar target/*.jar --spring.profiles.active=prod" 

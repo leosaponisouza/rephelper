@@ -29,23 +29,38 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
         try {
+            String path = request.getRequestURI();
+            log.debug("JwtAuthenticationFilter: processando requisição para {}", path);
+            
+            // Verificar se é um endpoint do Actuator
+            if (path.startsWith("/api/v1/actuator")) {
+                log.debug("JwtAuthenticationFilter: pulando autenticação para endpoint do Actuator: {}", path);
+                filterChain.doFilter(request, response);
+                return;
+            }
+            
             String jwt = getJwtFromRequest(request);
 
             if (StringUtils.hasText(jwt)) {
                 // Verificar se é um endpoint de login (que aceita token Firebase)
-                String path = request.getRequestURI();
                 if (path.endsWith("/auth/login") || path.endsWith("/auth/logout") || path.endsWith("/users")) {
-                    // Não validar aqui, deixe o controller fazer isso
+                    log.debug("JwtAuthenticationFilter: pulando validação JWT para endpoint: {}", path);
                 } else {
                     // Para outros endpoints, validar como um JWT normal
+                    log.debug("JwtAuthenticationFilter: validando JWT para {}", path);
                     if (tokenProvider.validateToken(jwt)) {
                         Authentication authentication = tokenProvider.getAuthentication(jwt);
                         SecurityContextHolder.getContext().setAuthentication(authentication);
+                        log.debug("JwtAuthenticationFilter: autenticação bem-sucedida para {}", path);
+                    } else {
+                        log.warn("JwtAuthenticationFilter: token inválido para {}", path);
                     }
                 }
+            } else {
+                log.debug("JwtAuthenticationFilter: nenhum token JWT encontrado para {}", path);
             }
         } catch (Exception e) {
-            log.error("Could not set user authentication in security context", e);
+            log.error("JwtAuthenticationFilter: erro ao processar autenticação: {}", e.getMessage(), e);
         }
 
         filterChain.doFilter(request, response);

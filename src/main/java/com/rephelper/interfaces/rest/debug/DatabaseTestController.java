@@ -138,11 +138,15 @@ public class DatabaseTestController {
         Map<String, Object> response = new HashMap<>();
         
         try {
-            // Consultar versão do MySQL
-            String mysqlVersion = jdbcTemplate.queryForObject("SELECT version()", String.class);
-            response.put("mysqlVersion", mysqlVersion);
+            // Verificar tipo de banco (MySQL ou MariaDB)
+            String version = jdbcTemplate.queryForObject("SELECT version()", String.class);
+            boolean isMariaDB = version != null && version.toLowerCase().contains("mariadb");
+            String dbType = isMariaDB ? "MariaDB" : "MySQL";
             
-            // Consultar variáveis do servidor MySQL
+            response.put("databaseType", dbType);
+            response.put("fullVersion", version);
+            
+            // Consultar variáveis do servidor 
             List<Map<String, Object>> variables = jdbcTemplate.queryForList(
                 "SHOW VARIABLES LIKE '%timeout%'");
             response.put("timeoutSettings", variables);
@@ -156,22 +160,34 @@ public class DatabaseTestController {
             List<String> databases = jdbcTemplate.queryForList("SHOW DATABASES", String.class);
             response.put("availableDatabases", databases);
             
-            log.info("Informações do MySQL recuperadas com sucesso");
+            // Informações específicas do MariaDB (se aplicável)
+            if (isMariaDB) {
+                try {
+                    // Verificar plugins do MariaDB
+                    List<Map<String, Object>> plugins = jdbcTemplate.queryForList(
+                        "SELECT * FROM information_schema.plugins WHERE plugin_status='ACTIVE'");
+                    response.put("activePlugins", plugins);
+                } catch (Exception e) {
+                    response.put("pluginsError", e.getMessage());
+                }
+            }
+            
+            log.info("Informações do {}} recuperadas com sucesso", dbType);
             return ResponseEntity.ok(ApiResponse.builder()
                     .status("SUCCESS")
-                    .message("Informações do MySQL")
+                    .message("Informações do " + dbType)
                     .data(response)
                     .build());
             
         } catch (Exception e) {
-            log.error("Erro ao obter informações do MySQL: {}", e.getMessage(), e);
+            log.error("Erro ao obter informações do banco de dados: {}", e.getMessage(), e);
             
             response.put("error", e.getMessage());
             response.put("errorType", e.getClass().getName());
             
             return ResponseEntity.ok(ApiResponse.builder()
                     .status("ERROR")
-                    .message("Falha ao obter informações do MySQL")
+                    .message("Falha ao obter informações do banco de dados")
                     .data(response)
                     .build());
         }

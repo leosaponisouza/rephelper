@@ -1,7 +1,7 @@
 FROM eclipse-temurin:21-jdk-alpine
 
 # Instalar ferramentas necessárias
-RUN apk add --no-cache curl wget mysql-client
+RUN apk add --no-cache curl wget
 
 # Definir diretório de trabalho
 WORKDIR /app
@@ -19,21 +19,8 @@ RUN ./mvnw clean package -DskipTests && \
     echo "JARs encontrados:" && \
     find target -name "*.jar" -type f | xargs ls -la
 
-# Criar script de inicialização para verificar conexão com banco
+# Criar script de inicialização simples
 RUN echo '#!/bin/sh' > /app/start.sh && \
-    echo 'echo "Aguardando conexão com o banco de dados MySQL..."' >> /app/start.sh && \
-    echo 'RETRIES=30' >> /app/start.sh && \
-    echo 'while [ $RETRIES -gt 0 ]' >> /app/start.sh && \
-    echo 'do' >> /app/start.sh && \
-    echo '  if mysqladmin ping -h$MYSQLHOST -P$MYSQLPORT -u$MYSQLUSER -p$MYSQLPASSWORD --silent; then' >> /app/start.sh && \
-    echo '    echo "Banco de dados MySQL conectado!"' >> /app/start.sh && \
-    echo '    break' >> /app/start.sh && \
-    echo '  fi' >> /app/start.sh && \
-    echo '  RETRIES=$((RETRIES-1))' >> /app/start.sh && \
-    echo '  echo "Tentando novamente em 5 segundos... ($RETRIES tentativas restantes)"' >> /app/start.sh && \
-    echo '  sleep 5' >> /app/start.sh && \
-    echo 'done' >> /app/start.sh && \
-    echo '' >> /app/start.sh && \
     echo 'echo "Iniciando aplicação com as seguintes variáveis de ambiente:"' >> /app/start.sh && \
     echo 'echo "MYSQLHOST: $MYSQLHOST"' >> /app/start.sh && \
     echo 'echo "MYSQLPORT: $MYSQLPORT"' >> /app/start.sh && \
@@ -42,7 +29,7 @@ RUN echo '#!/bin/sh' > /app/start.sh && \
     echo '' >> /app/start.sh && \
     echo 'JAR_FILE=$(find target -name "*.jar" -not -name "*sources.jar" -not -name "*javadoc.jar" | head -1)' >> /app/start.sh && \
     echo 'echo "Usando JAR: $JAR_FILE"' >> /app/start.sh && \
-    echo 'java -Dspring.datasource.hikari.maximum-pool-size=5 -Dspring.datasource.hikari.connection-timeout=60000 -jar $JAR_FILE --spring.profiles.active=$SPRING_PROFILES_ACTIVE' >> /app/start.sh && \
+    echo 'java -jar $JAR_FILE --spring.profiles.active=$SPRING_PROFILES_ACTIVE' >> /app/start.sh && \
     chmod +x /app/start.sh
 
 # Expor a porta

@@ -6,7 +6,7 @@ Aplicação para gerenciamento de representantes comerciais.
 
 - Java 21
 - Maven
-- PostgreSQL
+- MySQL
 
 ## Configuração para Ambiente de Desenvolvimento
 
@@ -108,16 +108,17 @@ git push heroku main
 3. Configure todas as variáveis de ambiente necessárias no painel do Railway:
    - Acesse o serviço da aplicação > Variables
    - Adicione cada variável de ambiente listada no `.env.example`
-   - Para serviços de banco de dados hospedados no Railway, use as variáveis geradas automaticamente:
+   - Para serviços de banco de dados MySQL hospedados no Railway, use as variáveis geradas automaticamente:
      ```
-     DB_HOST=${{Postgres.PGHOST}}
-     DB_PORT=${{Postgres.PGPORT}}
-     DB_NAME=${{Postgres.PGDATABASE}}
-     DB_USER=${{Postgres.PGUSER}}
-     DB_PASSWORD=${{Postgres.PGPASSWORD}}
+     DB_HOST=${MYSQL_HOST}
+     DB_PORT=${MYSQL_PORT}
+     DB_NAME=${MYSQL_DATABASE}
+     DB_USER=${MYSQL_USER}
+     DB_PASSWORD=${MYSQL_PASSWORD}
+     JDBC_DATABASE_URL=jdbc:mysql://${MYSQL_HOST}:${MYSQL_PORT}/${MYSQL_DATABASE}?useSSL=true&serverTimezone=UTC&createDatabaseIfNotExist=true&useUnicode=true&characterEncoding=utf8
      ```
 4. Certifique-se de definir `SPRING_PROFILES_ACTIVE=prod`
-5. Opcionalmente, adicione um serviço PostgreSQL ao seu projeto Railway para gerenciar o banco de dados junto com a aplicação.
+5. Opcionalmente, adicione um serviço MySQL ao seu projeto Railway para gerenciar o banco de dados junto com a aplicação.
 
 O deploy será realizado automaticamente após as alterações serem commitadas no repositório.
 

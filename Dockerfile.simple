@@ -1,7 +1,7 @@
 FROM eclipse-temurin:21-jdk-alpine
 
 # Instalar ferramentas necessárias
-RUN apk add --no-cache curl wget postgresql-client
+RUN apk add --no-cache curl wget mysql-client
 
 # Definir diretório de trabalho
 WORKDIR /app
@@ -21,12 +21,12 @@ RUN ./mvnw clean package -DskipTests && \
 
 # Criar script de inicialização para verificar conexão com banco
 RUN echo '#!/bin/sh' > /app/start.sh && \
-    echo 'echo "Aguardando conexão com o banco de dados..."' >> /app/start.sh && \
+    echo 'echo "Aguardando conexão com o banco de dados MySQL..."' >> /app/start.sh && \
     echo 'RETRIES=30' >> /app/start.sh && \
     echo 'while [ $RETRIES -gt 0 ]' >> /app/start.sh && \
     echo 'do' >> /app/start.sh && \
-    echo '  if pg_isready -h $DB_HOST -p $DB_PORT -U $DB_USER; then' >> /app/start.sh && \
-    echo '    echo "Banco de dados conectado!"' >> /app/start.sh && \
+    echo '  if mysqladmin ping -h$MYSQLHOST -P$MYSQLPORT -u$MYSQLUSER -p$MYSQLPASSWORD --silent; then' >> /app/start.sh && \
+    echo '    echo "Banco de dados MySQL conectado!"' >> /app/start.sh && \
     echo '    break' >> /app/start.sh && \
     echo '  fi' >> /app/start.sh && \
     echo '  RETRIES=$((RETRIES-1))' >> /app/start.sh && \
@@ -35,10 +35,9 @@ RUN echo '#!/bin/sh' > /app/start.sh && \
     echo 'done' >> /app/start.sh && \
     echo '' >> /app/start.sh && \
     echo 'echo "Iniciando aplicação com as seguintes variáveis de ambiente:"' >> /app/start.sh && \
-    echo 'echo "DB_HOST: $DB_HOST"' >> /app/start.sh && \
-    echo 'echo "DB_PORT: $DB_PORT"' >> /app/start.sh && \
-    echo 'echo "DB_NAME: $DB_NAME"' >> /app/start.sh && \
-    echo 'echo "JDBC_DATABASE_URL: $JDBC_DATABASE_URL"' >> /app/start.sh && \
+    echo 'echo "MYSQLHOST: $MYSQLHOST"' >> /app/start.sh && \
+    echo 'echo "MYSQLPORT: $MYSQLPORT"' >> /app/start.sh && \
+    echo 'echo "MYSQLDATABASE: $MYSQLDATABASE"' >> /app/start.sh && \
     echo 'echo "Profile: $SPRING_PROFILES_ACTIVE"' >> /app/start.sh && \
     echo '' >> /app/start.sh && \
     echo 'JAR_FILE=$(find target -name "*.jar" -not -name "*sources.jar" -not -name "*javadoc.jar" | head -1)' >> /app/start.sh && \

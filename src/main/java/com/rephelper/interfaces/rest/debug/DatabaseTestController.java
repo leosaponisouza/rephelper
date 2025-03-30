@@ -7,6 +7,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.core.env.Environment;
 
 import com.rephelper.application.dto.response.ApiResponse;
 
@@ -17,6 +18,7 @@ import java.util.Map;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
+import java.util.List;
 
 @RestController
 @RequestMapping("/debug/database")
@@ -34,6 +36,9 @@ public class DatabaseTestController {
     
     @Value("${spring.datasource.username}")
     private String dbUsername;
+    
+    @Autowired
+    private Environment env;
     
     @GetMapping("/test")
     public ResponseEntity<ApiResponse> testDatabaseConnection() {
@@ -90,22 +95,85 @@ public class DatabaseTestController {
     }
     
     @GetMapping("/env")
-    public ResponseEntity<ApiResponse> getDatabaseEnvironment() {
-        Map<String, Object> envVars = new HashMap<>();
+    public ResponseEntity<ApiResponse> getEnvironmentVariables() {
+        Map<String, String> envVars = new HashMap<>();
         
-        // Listar variáveis de ambiente relacionadas ao banco de dados
-        envVars.put("DB_HOST", System.getenv("DB_HOST"));
-        envVars.put("DB_PORT", System.getenv("DB_PORT"));
-        envVars.put("DB_NAME", System.getenv("DB_NAME"));
-        envVars.put("DB_USER", System.getenv("DB_USER"));
-        envVars.put("JDBC_DATABASE_URL", System.getenv("JDBC_DATABASE_URL"));
+        // Capturar todas as variáveis de ambiente relacionadas ao banco de dados
+        envVars.put("MYSQLHOST", System.getenv("MYSQLHOST"));
+        envVars.put("MYSQLPORT", System.getenv("MYSQLPORT"));
+        envVars.put("MYSQLDATABASE", System.getenv("MYSQLDATABASE"));
+        envVars.put("MYSQLUSER", System.getenv("MYSQLUSER"));
         
-        log.info("Variáveis de ambiente relacionadas ao banco de dados: {}", envVars);
+        // Não mostrar a senha completa por segurança
+        String password = System.getenv("MYSQLPASSWORD");
+        if (password != null && !password.isEmpty()) {
+            envVars.put("MYSQLPASSWORD", "******");
+        } else {
+            envVars.put("MYSQLPASSWORD", null);
+        }
+        
+        // Variáveis adicionais do MySQL
+        envVars.put("MYSQL_URL", System.getenv("MYSQL_URL"));
+        envVars.put("MYSQL_PUBLIC_URL", System.getenv("MYSQL_PUBLIC_URL"));
+        
+        // Capturar variáveis de ambiente do Spring
+        envVars.put("SPRING_PROFILES_ACTIVE", System.getenv("SPRING_PROFILES_ACTIVE"));
+        envVars.put("SERVER_PORT", System.getenv("SERVER_PORT"));
+        envVars.put("PORT", System.getenv("PORT"));
+        
+        // Usar ConfigurableEnvironment para obter as propriedades resolvidas
+        envVars.put("spring.datasource.url", env.getProperty("spring.datasource.url"));
+        envVars.put("spring.datasource.username", env.getProperty("spring.datasource.username"));
+        envVars.put("spring.datasource.driver-class-name", env.getProperty("spring.datasource.driver-class-name"));
         
         return ResponseEntity.ok(ApiResponse.builder()
                 .status("SUCCESS")
-                .message("Variáveis de ambiente relacionadas ao banco de dados")
+                .message("Variáveis de ambiente")
                 .data(envVars)
                 .build());
+    }
+
+    @GetMapping("/mysql-info")
+    public ResponseEntity<ApiResponse> getMySQLInfo() {
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            // Consultar versão do MySQL
+            String mysqlVersion = jdbcTemplate.queryForObject("SELECT version()", String.class);
+            response.put("mysqlVersion", mysqlVersion);
+            
+            // Consultar variáveis do servidor MySQL
+            List<Map<String, Object>> variables = jdbcTemplate.queryForList(
+                "SHOW VARIABLES LIKE '%timeout%'");
+            response.put("timeoutSettings", variables);
+            
+            // Consultar o status do servidor
+            List<Map<String, Object>> status = jdbcTemplate.queryForList(
+                "SHOW STATUS LIKE '%conn%'");
+            response.put("connectionStatus", status);
+            
+            // Consultar os bancos de dados disponíveis
+            List<String> databases = jdbcTemplate.queryForList("SHOW DATABASES", String.class);
+            response.put("availableDatabases", databases);
+            
+            log.info("Informações do MySQL recuperadas com sucesso");
+            return ResponseEntity.ok(ApiResponse.builder()
+                    .status("SUCCESS")
+                    .message("Informações do MySQL")
+                    .data(response)
+                    .build());
+            
+        } catch (Exception e) {
+            log.error("Erro ao obter informações do MySQL: {}", e.getMessage(), e);
+            
+            response.put("error", e.getMessage());
+            response.put("errorType", e.getClass().getName());
+            
+            return ResponseEntity.ok(ApiResponse.builder()
+                    .status("ERROR")
+                    .message("Falha ao obter informações do MySQL")
+                    .data(response)
+                    .build());
+        }
     }
 } 

@@ -1,5 +1,6 @@
 package com.rephelper.interfaces.rest.finance;
 
+import com.rephelper.application.dto.request.BalanceAdjustmentRequest;
 import com.rephelper.application.dto.response.RepublicFinancesResponse;
 import com.rephelper.application.mapper.RepublicFinancesDtoMapper;
 import com.rephelper.domain.exception.ValidationException;
@@ -16,6 +17,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/v1/finances")
@@ -50,5 +52,31 @@ public class RepublicFinancesController {
         RepublicFinances finances = republicFinancesService.getOrCreateRepublicFinances(republicId);
 
         return ResponseEntity.ok(republicFinancesDtoMapper.toRepublicFinancesResponse(finances));
+    }
+    
+    @PostMapping("/{republicId}/adjust-balance")
+    @Operation(summary = "Adjust republic balance", description = "Adjusts the financial balance of a republic")
+    public ResponseEntity<RepublicFinancesResponse> adjustRepublicBalance(
+            @PathVariable UUID republicId,
+            @Valid @RequestBody BalanceAdjustmentRequest request,
+            @AuthenticationPrincipal CustomUserDetails currentUser) {
+            
+        // Get user to validate access
+        User user = userService.getUserById(currentUser.getUserId());
+
+        if (user.getCurrentRepublic() == null) {
+            throw new ValidationException("User is not associated with any republic");
+        }
+
+        // Verify user belongs to the specified republic (unless admin)
+        if (!republicId.equals(user.getCurrentRepublic().getId()) &&
+                !currentUser.getRole().equals("admin")) {
+            throw new ValidationException("You can only adjust finances for your own republic");
+        }
+        
+        // Update the republic's balance
+        RepublicFinances updatedFinances = republicFinancesService.updateBalance(republicId, request.getAmount());
+        
+        return ResponseEntity.ok(republicFinancesDtoMapper.toRepublicFinancesResponse(updatedFinances));
     }
 }

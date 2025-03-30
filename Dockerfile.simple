@@ -26,7 +26,11 @@ RUN echo '#!/bin/sh' > /app/start.sh && \
     echo 'echo "MYSQLPORT: $MYSQLPORT"' >> /app/start.sh && \
     echo 'echo "MYSQLDATABASE: $MYSQLDATABASE"' >> /app/start.sh && \
     echo 'echo "Profile: $SPRING_PROFILES_ACTIVE"' >> /app/start.sh && \
-    echo 'echo "Firebase Service Account: ${FIREBASE_SERVICE_ACCOUNT_KEY:não configurado}"' >> /app/start.sh && \
+    echo 'if [ -n "$FIREBASE_SERVICE_ACCOUNT_KEY" ]; then' >> /app/start.sh && \
+    echo '  echo "Firebase Service Account: Configurada"' >> /app/start.sh && \
+    echo 'else' >> /app/start.sh && \
+    echo '  echo "Firebase Service Account: Não configurada"' >> /app/start.sh && \
+    echo 'fi' >> /app/start.sh && \
     echo '' >> /app/start.sh && \
     echo '# Verificar se a variável Firebase está configurada' >> /app/start.sh && \
     echo 'if [ -z "$FIREBASE_SERVICE_ACCOUNT_KEY" ]; then' >> /app/start.sh && \

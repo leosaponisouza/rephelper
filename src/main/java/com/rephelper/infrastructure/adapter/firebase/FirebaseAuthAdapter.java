@@ -21,17 +21,34 @@ public class FirebaseAuthAdapter {
 
     public String verifyToken(String token) {
         try {
+            if (token == null || token.isEmpty()) {
+                log.error("Token Firebase nulo ou vazio");
+                throw new AuthenticationException("Token Firebase inválido: não pode ser nulo ou vazio");
+            }
+            
+            log.debug("Verificando token Firebase: {}", token.substring(0, Math.min(10, token.length())) + "...");
             FirebaseToken decodedToken = firebaseAuth.verifyIdToken(token);
+            log.debug("Token verificado com sucesso para o usuário: {}", decodedToken.getUid());
             return decodedToken.getUid();
         } catch (FirebaseAuthException e) {
-            log.error("Firebase token verification failed", e);
-            throw new AuthenticationException("Invalid or expired Firebase token: " + e.getMessage());
+            log.error("Falha na verificação do token Firebase", e);
+            throw new AuthenticationException("Token Firebase inválido ou expirado: " + e.getMessage());
+        } catch (Exception e) {
+            log.error("Erro inesperado ao verificar token Firebase", e);
+            throw new AuthenticationException("Erro ao verificar autenticação: " + e.getMessage());
         }
     }
 
     public FirebaseUserInfo getUserInfo(String uuid) {
         try {
+            if (uuid == null || uuid.isEmpty()) {
+                log.error("UUID nulo ou vazio");
+                throw new AuthenticationException("UUID inválido: não pode ser nulo ou vazio");
+            }
+            
+            log.debug("Buscando informações do usuário Firebase: {}", uuid);
             UserRecord userRecord = firebaseAuth.getUser(uuid);
+            log.debug("Informações do usuário obtidas com sucesso: {}", userRecord.getUid());
 
             // Safely handle provider data
             String provider = "unknown";
@@ -49,8 +66,11 @@ public class FirebaseAuthAdapter {
                     .provider(provider)
                     .build();
         } catch (FirebaseAuthException e) {
-            log.error("Error fetching user info from Firebase", e);
-            throw new AuthenticationException("Error fetching user info from Firebase: " + e.getMessage());
+            log.error("Erro ao buscar informações do usuário no Firebase", e);
+            throw new AuthenticationException("Erro ao buscar informações do usuário no Firebase: " + e.getMessage());
+        } catch (Exception e) {
+            log.error("Erro inesperado ao buscar informações do usuário no Firebase", e);
+            throw new AuthenticationException("Erro ao buscar informações do usuário: " + e.getMessage());
         }
     }
 }

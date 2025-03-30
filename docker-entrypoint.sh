@@ -1,20 +1,45 @@
 #!/bin/sh
 set -e
 
-# Configurações padrão da JVM
-JAVA_OPTS=${JAVA_OPTS:-"-Xms256m -Xmx512m"}
+echo "Docker entrypoint iniciado"
 
-# Configurações para ambiente de produção
-PROD_OPTS="-XX:+UseContainerSupport -XX:+UseG1GC -XX:MaxRAMPercentage=75.0 -XX:+HeapDumpOnOutOfMemoryError"
-
-# Configurações específicas para Railway
-if [ -n "$RAILWAY_ENVIRONMENT" ]; then
-  echo "Executando em ambiente Railway: $RAILWAY_ENVIRONMENT"
-  RAILWAY_OPTS="-Dserver.port=${PORT:-8080}"
+# Verifica variáveis obrigatórias
+if [ -z "$SPRING_PROFILES_ACTIVE" ]; then
+  echo "ERRO: Variável SPRING_PROFILES_ACTIVE não definida"
+  echo "Definindo padrão como prod"
+  export SPRING_PROFILES_ACTIVE=prod
 fi
 
-# Configurar o perfil ativo
-PROFILE=${SPRING_PROFILES_ACTIVE:-"prod"}
+echo "Perfil ativo: $SPRING_PROFILES_ACTIVE"
 
-# Iniciar a aplicação com todas as configurações
-exec java $JAVA_OPTS $PROD_OPTS $RAILWAY_OPTS -jar app.jar --spring.profiles.active=$PROFILE 
+# Se for ambiente de produção, verifica variáveis obrigatórias
+if [ "$SPRING_PROFILES_ACTIVE" = "prod" ]; then
+  echo "Verificando configurações para ambiente de produção..."
+
+  # Verifica se as variáveis de banco de dados estão presentes
+  if [ -z "$MYSQLHOST" ] || [ -z "$MYSQLPORT" ] || [ -z "$MYSQLDATABASE" ] || [ -z "$MYSQLUSER" ] || [ -z "$MYSQLPASSWORD" ]; then
+    echo "AVISO: Algumas variáveis de banco de dados não estão configuradas!"
+  else
+    echo "Configuração de banco de dados OK"
+  fi
+  
+  # Verifica se a variável do Firebase está configurada
+  if [ -z "$FIREBASE_SERVICE_ACCOUNT_KEY" ]; then
+    echo "AVISO: FIREBASE_SERVICE_ACCOUNT_KEY não está configurada. Autenticação pode falhar."
+  else
+    echo "Configuração do Firebase OK"
+  fi
+  
+  # Copiar arquivo de ambiente de produção
+  if [ -f ".env.prod" ]; then
+    echo "Copiando .env.prod para .env"
+    cp .env.prod .env
+  fi
+fi
+
+echo "Iniciando aplicação com as seguintes configurações:"
+echo "SPRING_PROFILES_ACTIVE: $SPRING_PROFILES_ACTIVE"
+echo "DATABASE: $MYSQLDATABASE (Host: $MYSQLHOST:$MYSQLPORT)"
+
+# Executar comando passado para o script
+exec "$@" 

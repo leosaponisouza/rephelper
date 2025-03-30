@@ -26,7 +26,25 @@ RUN echo '#!/bin/sh' > /app/start.sh && \
     echo 'echo "MYSQLPORT: $MYSQLPORT"' >> /app/start.sh && \
     echo 'echo "MYSQLDATABASE: $MYSQLDATABASE"' >> /app/start.sh && \
     echo 'echo "Profile: $SPRING_PROFILES_ACTIVE"' >> /app/start.sh && \
+    echo 'echo "Firebase Service Account: ${FIREBASE_SERVICE_ACCOUNT_KEY:não configurado}"' >> /app/start.sh && \
     echo '' >> /app/start.sh && \
+    echo '# Verificar se a variável Firebase está configurada' >> /app/start.sh && \
+    echo 'if [ -z "$FIREBASE_SERVICE_ACCOUNT_KEY" ]; then' >> /app/start.sh && \
+    echo '  echo "AVISO: FIREBASE_SERVICE_ACCOUNT_KEY não está configurada"' >> /app/start.sh && \
+    echo '  echo "A autenticação Firebase não funcionará corretamente"' >> /app/start.sh && \
+    echo 'else' >> /app/start.sh && \
+    echo '  echo "Firebase Service Account configurada corretamente"' >> /app/start.sh && \
+    echo 'fi' >> /app/start.sh && \
+    echo '' >> /app/start.sh && \
+    echo '# Copiar arquivo .env.prod para .env se estiver no ambiente de produção' >> /app/start.sh && \
+    echo 'if [ "$SPRING_PROFILES_ACTIVE" = "prod" ]; then' >> /app/start.sh && \
+    echo '  echo "Ambiente de produção detectado. Copiando .env.prod para .env"' >> /app/start.sh && \
+    echo '  cp .env.prod .env' >> /app/start.sh && \
+    echo '  echo "Conteúdo do .env após a cópia:"' >> /app/start.sh && \
+    echo '  grep -v "^#" .env | grep .' >> /app/start.sh && \
+    echo 'fi' >> /app/start.sh && \
+    echo '' >> /app/start.sh && \
+    echo '# Encontrar e executar o JAR' >> /app/start.sh && \
     echo 'JAR_FILE=$(find target -name "*.jar" -not -name "*sources.jar" -not -name "*javadoc.jar" | head -1)' >> /app/start.sh && \
     echo 'echo "Usando JAR: $JAR_FILE"' >> /app/start.sh && \
     echo 'java -jar $JAR_FILE --spring.profiles.active=$SPRING_PROFILES_ACTIVE' >> /app/start.sh && \
@@ -34,6 +52,9 @@ RUN echo '#!/bin/sh' > /app/start.sh && \
 
 # Expor a porta
 EXPOSE 8080
+
+# Verificar que a variável de ambiente está sendo passada corretamente
+ENV FIREBASE_SERVICE_ACCOUNT_KEY=${FIREBASE_SERVICE_ACCOUNT_KEY}
 
 # Comando para iniciar a aplicação
 CMD ["/app/start.sh"] 

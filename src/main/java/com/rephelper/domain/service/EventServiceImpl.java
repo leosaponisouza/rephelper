@@ -21,7 +21,7 @@ import com.rephelper.domain.port.out.UserRepositoryPort;
 import lombok.RequiredArgsConstructor;
 
 import static com.rephelper.domain.model.Notification.NotificationType.EVENT_INVITATION;
-import static com.rephelper.domain.model.NotificationType.EVENT_CREATED;
+import static com.rephelper.domain.model.Notification.NotificationType.EVENT_CREATED;
 
 @Service
 @RequiredArgsConstructor
@@ -65,7 +65,18 @@ public class EventServiceImpl implements EventServicePort {
                 .createdAt(LocalDateTime.now())
                 .build();
 
-        return eventRepository.save(event);
+        // Salvar o evento para obter um ID
+        Event savedEvent = eventRepository.save(event);
+        
+        // Adicionar o criador como participante confirmado automaticamente
+        eventRepository.inviteUserToEvent(savedEvent.getId(), creatorUserId, Event.InvitationStatus.CONFIRMED);
+        
+        // Notificar outros membros da república sobre o novo evento
+        notifyRepublicMembersAboutNewEvent(savedEvent, creator);
+        
+        // Retornar o evento atualizado com o convite do criador
+        return eventRepository.findById(savedEvent.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Event not found after creation"));
     }
 
     @Override
@@ -299,6 +310,26 @@ public class EventServiceImpl implements EventServicePort {
 
         if (startDate.isBefore(LocalDateTime.now())) {
             throw new ValidationException("Start date cannot be in the past");
+        }
+    }
+
+    /**
+     * Notifica os membros da república sobre um novo evento
+     */
+    private void notifyRepublicMembersAboutNewEvent(Event event, User creator) {
+        if (event.getRepublic() != null && event.getRepublic().getMembers() != null) {
+            event.getRepublic().getMembers().stream()
+                    .filter(member -> !member.getId().equals(creator.getId())) // Excluir o criador
+                    .forEach(member -> {
+                        notificationService.createNotification(
+                            member.getId(),
+                            "Novo evento na república: " + event.getTitle(),
+                            creator.getName() + " criou um novo evento: " + event.getTitle(),
+                            Notification.NotificationType.EVENT_CREATED,
+                            "event",
+                            event.getId().toString()
+                        );
+                    });
         }
     }
 }

@@ -39,7 +39,7 @@ public class SecurityConfig {
     private static final List<String> PUBLIC_PATHS = Arrays.asList(
         "/api/v1/auth/**",
         "/auth/login",
-        "/api/v1/users",
+        "/api/v1/users", // Apenas o endpoint base POST para criação de usuário
         "/api/v1/health/**",
         "/api/v1/system/status",
         "/debug/**", // Endpoint temporário para diagnóstico

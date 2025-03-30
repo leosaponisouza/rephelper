@@ -31,7 +31,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private static final List<String> PUBLIC_PATHS = Arrays.asList(
         "/api/v1/auth/**", // Usando wildcard para todos os endpoints de autenticação
         "/auth/login",
-        "/api/v1/users",
+        "/api/v1/users", // Apenas o endpoint base POST para criação de usuário
         "/api/v1/health",
         "/api/v1/system/status",
         "/debug/**",   // Adicionar caminho de debug temporário
@@ -84,7 +84,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
      * Verifica se o caminho está na lista de caminhos públicos
      */
     private boolean isPublicPath(String path) {
-        return PUBLIC_PATHS.stream().anyMatch(path::startsWith);
+        // Verificação exata para paths sem wildcard
+        if (PUBLIC_PATHS.contains(path)) {
+            return true;
+        }
+        
+        // Para paths com wildcard, verifica padrões
+        return PUBLIC_PATHS.stream()
+            .filter(pattern -> pattern.endsWith("/**"))
+            .map(pattern -> pattern.substring(0, pattern.length() - 3)) // Remove o "/**"
+            .anyMatch(path::startsWith);
     }
     
     /**

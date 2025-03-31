@@ -3,7 +3,6 @@ package com.rephelper.domain.service;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import com.rephelper.domain.model.*;
 import com.rephelper.domain.port.in.NotificationServicePort;
@@ -21,7 +20,6 @@ import com.rephelper.domain.port.out.UserRepositoryPort;
 import lombok.RequiredArgsConstructor;
 
 import static com.rephelper.domain.model.Notification.NotificationType.EVENT_INVITATION;
-import static com.rephelper.domain.model.Notification.NotificationType.EVENT_CREATED;
 
 @Service
 @RequiredArgsConstructor
@@ -46,7 +44,7 @@ public class EventServiceImpl implements EventServicePort {
         }
 
         // Verificar se a república existe
-        if (!republicRepository.findById(event.getRepublic().getId()).isPresent()) {
+        if (republicRepository.findById(event.getRepublic().getId()).isEmpty()) {
             throw new ResourceNotFoundException("Republic not found with id: " + event.getRepublic().getId());
         }
 
@@ -83,7 +81,7 @@ public class EventServiceImpl implements EventServicePort {
     @Transactional(readOnly = true)
     public List<Event> getAllEventsByRepublicId(UUID republicId) {
         // Verificar se a república existe
-        if (!republicRepository.findById(republicId).isPresent()) {
+        if (republicRepository.findById(republicId).isEmpty()) {
             throw new ResourceNotFoundException("Republic not found with id: " + republicId);
         }
 
@@ -101,7 +99,7 @@ public class EventServiceImpl implements EventServicePort {
     @Transactional(readOnly = true)
     public List<Event> getUpcomingEventsByRepublicId(UUID republicId) {
         // Verificar se a república existe
-        if (!republicRepository.findById(republicId).isPresent()) {
+        if (republicRepository.findById(republicId).isEmpty()) {
             throw new ResourceNotFoundException("Republic not found with id: " + republicId);
         }
 
@@ -206,7 +204,7 @@ public class EventServiceImpl implements EventServicePort {
             notificationService.createNotification(
                 userId,
                 "Convite para evento: " + event.getTitle(),
-                inviter.getName() + " convidou você para o evento: " + event.getTitle(),
+                    ( inviter.getNickname() != null  ? inviter.getNickname() : inviter.getName() ) + " convidou você para o evento: " + event.getTitle(),
                 EVENT_INVITATION,
                 "event",
                 eventId.toString()
@@ -260,7 +258,7 @@ public class EventServiceImpl implements EventServicePort {
             notificationService.createNotification(
                 event.getCreator().getId(),
                 "Confirmação de presença: " + event.getTitle(),
-                user.getName() + " confirmou presença no evento: " + event.getTitle(),
+                    ( user.getNickname() != null  ? user.getNickname() : user.getName() ) + " confirmou presença no evento: " + event.getTitle(),
                 EVENT_INVITATION,
                 "event",
                 eventId.toString()
@@ -274,7 +272,7 @@ public class EventServiceImpl implements EventServicePort {
     @Transactional(readOnly = true)
     public List<Event> getEventsByInvitedUser(UUID userId) {
         // Validar usuário
-        if (!userRepository.findById(userId).isPresent()) {
+        if (userRepository.findById(userId).isEmpty()) {
             throw new ResourceNotFoundException("User not found with id: " + userId);
         }
 
@@ -285,7 +283,7 @@ public class EventServiceImpl implements EventServicePort {
     @Transactional(readOnly = true)
     public List<Event> getEventsByConfirmedUser(UUID userId) {
         // Validar usuário
-        if (!userRepository.findById(userId).isPresent()) {
+        if (userRepository.findById(userId).isEmpty()) {
             throw new ResourceNotFoundException("User not found with id: " + userId);
         }
 
@@ -324,7 +322,7 @@ public class EventServiceImpl implements EventServicePort {
                         notificationService.createNotification(
                             member.getId(),
                             "Novo evento na república: " + event.getTitle(),
-                            creator.getName() + " criou um novo evento: " + event.getTitle(),
+                                ( creator.getNickname() != null  ? creator.getNickname() : creator.getName() ) + " criou um novo evento: " + event.getTitle(),
                             Notification.NotificationType.EVENT_CREATED,
                             "event",
                             event.getId().toString()

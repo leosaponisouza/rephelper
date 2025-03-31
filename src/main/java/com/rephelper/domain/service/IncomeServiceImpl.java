@@ -91,7 +91,8 @@ public class IncomeServiceImpl implements IncomeServicePort {
                     notificationService.createNotification(
                             member.getId(),
                             "Nova Receita Registrada",
-                            contributor.getName() + " registrou uma nova receita de R$ " + income.getAmount() + " da fonte: " + income.getSource(),
+                            contributor.getNickname() != null ? contributor.getNickname() : contributor.getName()
+                                    + " registrou uma nova receita de R$ " + income.getAmount() + " da fonte: " + income.getSource(),
                             Notification.NotificationType.INCOME_CREATED,
                             "income",
                             savedIncome.getId().toString()
@@ -183,7 +184,7 @@ public class IncomeServiceImpl implements IncomeServicePort {
     @Transactional(readOnly = true)
     public List<Income> getIncomesByRepublicId(UUID republicId) {
         // Verify republic exists
-        if (!republicRepository.findById(republicId).isPresent()) {
+        if (republicRepository.findById(republicId).isEmpty()) {
             throw new ResourceNotFoundException("Republic not found with id: " + republicId);
         }
 
@@ -194,7 +195,7 @@ public class IncomeServiceImpl implements IncomeServicePort {
     @Transactional(readOnly = true)
     public List<Income> getIncomesByRepublicIdAndDateRange(UUID republicId, LocalDateTime startDate, LocalDateTime endDate) {
         // Verify republic exists
-        if (!republicRepository.findById(republicId).isPresent()) {
+        if (republicRepository.findById(republicId).isEmpty()) {
             throw new ResourceNotFoundException("Republic not found with id: " + republicId);
         }
 
@@ -210,7 +211,7 @@ public class IncomeServiceImpl implements IncomeServicePort {
     @Transactional(readOnly = true)
     public List<Income> getIncomesByRepublicIdAndSource(UUID republicId, String source) {
         // Verify republic exists
-        if (!republicRepository.findById(republicId).isPresent()) {
+        if (republicRepository.findById(republicId).isEmpty()) {
             throw new ResourceNotFoundException("Republic not found with id: " + republicId);
         }
 
@@ -221,7 +222,7 @@ public class IncomeServiceImpl implements IncomeServicePort {
     @Transactional(readOnly = true)
     public List<Income> getIncomesByContributorId(UUID contributorId) {
         // Verify user exists
-        if (!userRepository.findById(contributorId).isPresent()) {
+        if (userRepository.findById(contributorId).isEmpty()) {
             throw new ResourceNotFoundException("User not found with id: " + contributorId);
         }
 
@@ -253,7 +254,7 @@ public class IncomeServiceImpl implements IncomeServicePort {
         // Notificar administradores e contribuidor sobre a exclusão da receita
         String notificationTitle = "Receita Excluída";
         String notificationMessage = "Uma receita de R$ " + income.getAmount() + " referente a '" + income.getDescription() +
-                "' foi excluída por " + deleter.getName();
+                "' foi excluída por " + (deleter.getNickname() != null ? deleter.getNickname() : deleter.getName());
 
         // Notificar o contribuidor se ele não excluiu a receita ele mesmo
         if (income.getContributor() != null && !income.getContributor().getId().equals(deleterId)) {

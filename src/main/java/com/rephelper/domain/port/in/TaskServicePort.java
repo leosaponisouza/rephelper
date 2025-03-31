@@ -81,6 +81,16 @@ public interface TaskServicePort {
     List<Task> getTasksAssignedToUserInRepublic(UUID userId, UUID republicId);
     
     /**
+     * Obtém tarefas criadas por um usuário
+     */
+    List<Task> getTasksCreatedByUser(UUID userId);
+
+    /**
+     * Obtém tarefas criadas por um usuário em uma república
+     */
+    List<Task> getTasksCreatedByUserInRepublic(UUID userId, UUID republicId);
+    
+    /**
      * Busca tarefas com filtros e paginação
      * 
      * @param republicId ID da república

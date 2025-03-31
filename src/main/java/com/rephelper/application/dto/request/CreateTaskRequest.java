@@ -35,4 +35,6 @@ public class CreateTaskRequest {
     private Integer recurrenceInterval;
     
     private LocalDateTime recurrenceEndDate;
+
+    private Long createdById;
 }

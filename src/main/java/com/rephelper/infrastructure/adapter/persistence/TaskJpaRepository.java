@@ -29,6 +29,12 @@ public interface TaskJpaRepository extends JpaRepository<TaskJpaEntity, Long>, J
 
     @Query("SELECT t FROM TaskJpaEntity t JOIN t.assignedUsers u WHERE u.uuid = :userId AND t.republic.uuid = :republicId")
     List<TaskJpaEntity> findByAssignedUserIdAndRepublicId(@Param("userId") UUID userId, @Param("republicId") UUID republicId);
+
+    @Query("SELECT t FROM TaskJpaEntity t WHERE t.createdBy.uuid = :userId")
+    List<TaskJpaEntity> findByCreatedByUserId(@Param("userId") UUID userId);
+
+    @Query("SELECT t FROM TaskJpaEntity t WHERE t.createdBy.uuid = :userId AND t.republic.uuid = :republicId")
+    List<TaskJpaEntity> findByCreatedByUserIdAndRepublicId(@Param("userId") UUID userId, @Param("republicId") UUID republicId);
     
     /**
      * Busca tarefas com paginação e ordenação

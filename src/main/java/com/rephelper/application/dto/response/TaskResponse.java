@@ -1,6 +1,7 @@
 package com.rephelper.application.dto.response;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -29,6 +30,7 @@ public class TaskResponse {
     private LocalDateTime dueDate;
     private LocalDateTime completedAt;
     private String category;
+    private UserSummaryResponse createdBy;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 

@@ -56,6 +56,16 @@ public interface TaskRepositoryPort {
     List<Task> findByAssignedUserIdAndRepublicId(UUID userId, UUID republicId);
 
     /**
+     * Busca tarefas criadas por um usuário
+     */
+    List<Task> findByCreatedByUserId(UUID userId);
+
+    /**
+     * Busca tarefas criadas por um usuário em uma república
+     */
+    List<Task> findByCreatedByUserIdAndRepublicId(UUID userId, UUID republicId);
+
+    /**
      * Remove uma tarefa
      */
     void delete(Task task);

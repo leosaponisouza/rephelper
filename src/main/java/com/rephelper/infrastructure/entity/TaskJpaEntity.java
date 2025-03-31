@@ -43,6 +43,10 @@ public class TaskJpaEntity {
     @JoinColumn(name = "republic_id", nullable = false)
     private RepublicJpaEntity republic;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "created_by", nullable = false)
+    private UserJpaEntity createdBy;
+
     @ManyToMany
     @JoinTable(
             name = "user_tasks",

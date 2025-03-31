@@ -46,6 +46,9 @@ public class TaskServiceImpl implements TaskServicePort {
             throw new ForbiddenException("Você só pode criar tarefas para sua própria república");
         }
 
+        // Definir o criador da tarefa
+        task.setCreatedBy(user);
+
         // Verificar se a república existe
         if (!republicRepository.findById(task.getRepublic().getId()).isPresent()) {
             throw new ResourceNotFoundException("República não encontrada com id: " + task.getRepublic().getId());
@@ -403,27 +406,46 @@ public class TaskServiceImpl implements TaskServicePort {
     @Override
     @Transactional(readOnly = true)
     public List<Task> getTasksAssignedToUserInRepublic(UUID userId, UUID republicId) {
-        // Validar usuário
+        // Verificar se o usuário existe
         if (!userRepository.findById(userId).isPresent()) {
-            throw new ResourceNotFoundException("User not found with id: " + userId);
+            throw new ResourceNotFoundException("Usuário não encontrado com id: " + userId);
         }
 
-        // Validar república
+        // Verificar se a república existe
         if (!republicRepository.findById(republicId).isPresent()) {
-            throw new ResourceNotFoundException("Republic not found with id: " + republicId);
+            throw new ResourceNotFoundException("República não encontrada com id: " + republicId);
         }
 
-        // Use findAssignedWithFilters with republic filter and default sorting
-        TaskFilterRequest filter = new TaskFilterRequest();
-        filter.setSortBy("dueDate");
-        filter.setSortDirection("ASC");
-        filter.setAssignedUserId(userId);
-        
-        // Since findAssignedWithFilters doesn't have a republic filter parameter,
-        // we need to use findWithFilters with both user and republic filters
-        return taskRepository.findWithFilters(republicId, filter, null).getContent();
+        return taskRepository.findByAssignedUserIdAndRepublicId(userId, republicId);
     }
-    
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Task> getTasksCreatedByUser(UUID userId) {
+        // Verificar se o usuário existe
+        if (!userRepository.findById(userId).isPresent()) {
+            throw new ResourceNotFoundException("Usuário não encontrado com id: " + userId);
+        }
+
+        return taskRepository.findByCreatedByUserId(userId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Task> getTasksCreatedByUserInRepublic(UUID userId, UUID republicId) {
+        // Verificar se o usuário existe
+        if (!userRepository.findById(userId).isPresent()) {
+            throw new ResourceNotFoundException("Usuário não encontrado com id: " + userId);
+        }
+
+        // Verificar se a república existe
+        if (!republicRepository.findById(republicId).isPresent()) {
+            throw new ResourceNotFoundException("República não encontrada com id: " + republicId);
+        }
+
+        return taskRepository.findByCreatedByUserIdAndRepublicId(userId, republicId);
+    }
+
     @Override
     @Transactional(readOnly = true)
     public Page<Task> findTasksWithFilters(UUID republicId, TaskFilterRequest filter, Pageable pageable) {

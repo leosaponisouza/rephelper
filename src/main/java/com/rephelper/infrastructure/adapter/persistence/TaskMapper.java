@@ -40,6 +40,7 @@ public class TaskMapper {
                 .recurrenceInterval(jpaEntity.getRecurrenceInterval())
                 .recurrenceEndDate(jpaEntity.getRecurrenceEndDate())
                 .parentTaskId(jpaEntity.getParentTaskId())
+                .createdBy(jpaEntity.getCreatedBy() != null ? userMapper.toDomainEntityWithoutRepublic(jpaEntity.getCreatedBy()) : null)
                 .build();
 
         // Map republic if present
@@ -61,6 +62,7 @@ public class TaskMapper {
                     .recurrenceInterval(task.getRecurrenceInterval())
                     .recurrenceEndDate(task.getRecurrenceEndDate())
                     .parentTaskId(task.getParentTaskId())
+                    .createdBy(task.getCreatedBy())
                     .build();
         }
 
@@ -86,6 +88,7 @@ public class TaskMapper {
                     .recurrenceInterval(task.getRecurrenceInterval())
                     .recurrenceEndDate(task.getRecurrenceEndDate())
                     .parentTaskId(task.getParentTaskId())
+                    .createdBy(task.getCreatedBy())
                     .build();
         }
 
@@ -111,6 +114,7 @@ public class TaskMapper {
                 .recurrenceInterval(domainEntity.getRecurrenceInterval())
                 .recurrenceEndDate(domainEntity.getRecurrenceEndDate())
                 .parentTaskId(domainEntity.getParentTaskId())
+                .createdBy(domainEntity.getCreatedBy() != null ? userMapper.toJpaEntityWithoutRepublic(domainEntity.getCreatedBy()) : null)
                 .build();
 
         // Map republic if present

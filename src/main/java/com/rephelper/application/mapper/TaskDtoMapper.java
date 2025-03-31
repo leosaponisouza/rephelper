@@ -79,6 +79,7 @@ public class TaskDtoMapper {
                 .completedAt(task.getCompletedAt())
                 .category(task.getCategory())
                 .createdAt(task.getCreatedAt())
+                .createdBy(userDtoMapper.toUserSummaryResponse(task.getCreatedBy()))
                 .updatedAt(task.getUpdatedAt())
                 // Adiciona os campos de recorrência no response
                 .isRecurring(task.isRecurring())

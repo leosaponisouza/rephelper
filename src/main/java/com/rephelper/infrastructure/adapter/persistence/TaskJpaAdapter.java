@@ -45,6 +45,7 @@ public class TaskJpaAdapter implements TaskRepositoryPort {
                 .completedAt(task.getCompletedAt())
                 .category(task.getCategory())
                 .createdAt(LocalDateTime.now())
+                    .createdBy(task.getCreatedBy())
                 .updatedAt(task.getUpdatedAt())
                 .isRecurring(task.isRecurring())
                 .recurrenceType(task.getRecurrenceType())
@@ -103,6 +104,20 @@ public class TaskJpaAdapter implements TaskRepositoryPort {
     @Override
     public List<Task> findByAssignedUserIdAndRepublicId(UUID userId, UUID republicId) {
         return taskJpaRepository.findByAssignedUserIdAndRepublicId(userId, republicId).stream()
+                .map(taskMapper::toDomainEntity)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Task> findByCreatedByUserId(UUID userId) {
+        return taskJpaRepository.findByCreatedByUserId(userId).stream()
+                .map(taskMapper::toDomainEntity)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Task> findByCreatedByUserIdAndRepublicId(UUID userId, UUID republicId) {
+        return taskJpaRepository.findByCreatedByUserIdAndRepublicId(userId, republicId).stream()
                 .map(taskMapper::toDomainEntity)
                 .collect(Collectors.toList());
     }

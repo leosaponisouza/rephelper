@@ -22,6 +22,7 @@ public class Task {
     private String title;
     private String description;
     private Republic republic;
+    private User createdBy;
     @Builder.Default
     private Set<User> assignedUsers = new HashSet<>();
     @Builder.Default
@@ -251,6 +252,7 @@ public class Task {
                 .recurrenceInterval(this.recurrenceInterval)
                 .recurrenceEndDate(this.recurrenceEndDate)
                 .parentTaskId(this.id)
+                .createdBy(this.createdBy)
                 .build();
         
         // Copia os usuários atribuídos
@@ -259,5 +261,9 @@ public class Task {
         }
         
         return newTask;
+    }
+
+    public void setCreatedBy(User user) {
+        this.createdBy = user;
     }
 }

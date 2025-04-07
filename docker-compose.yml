@@ -20,6 +20,9 @@ services:
       - JWT_EXPIRES_IN=604800000
     depends_on:
       - postgres
+    labels:
+      - "coroot.scrape=true"
+      - "coroot.scrape.port=8080"
 
   postgres:
     image: postgres:16-alpine
@@ -38,6 +41,40 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    labels:
+      - "coroot.scrape=true"
+      - "coroot.scrape.port=5432"
+
+  coroot:
+    image: coroot/coroot
+    container_name: rephelper-coroot
+    restart: unless-stopped
+    ports:
+      - "8081:8080"
+    volumes:
+      - coroot_data:/var/lib/coroot
+    environment:
+      - COROOT_PROJECT_NAME=rephelper
+      - COROOT_PROMETHEUS_URL=http://prometheus:9090
+    depends_on:
+      - prometheus
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: rephelper-prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
 
 volumes:
-  postgres_data: 
+  postgres_data:
+  coroot_data:
+  prometheus_data: 

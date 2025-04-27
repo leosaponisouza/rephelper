@@ -186,4 +186,19 @@ public class UserServiceImpl implements UserServicePort {
         User user = getUserById(id);
         userRepository.delete(user);
     }
+    
+    @Override
+    public User removeFromRepublic(UUID userId) {
+        User user = getUserById(userId);
+        
+        // Verificar se o usuário está em uma república
+        if (user.getCurrentRepublic() == null) {
+            throw new ValidationException("User is not associated with any republic");
+        }
+        
+        // Remover o usuário da república (limpar current_republic_id)
+        user.leaveRepublic();
+        
+        return userRepository.save(user);
+    }
 }

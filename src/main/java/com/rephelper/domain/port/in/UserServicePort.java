@@ -59,4 +59,9 @@ public interface UserServicePort {
      * Remove um usuário
      */
     void deleteUser(UUID id);
+    
+    /**
+     * Remove um usuário de sua república atual
+     */
+    User removeFromRepublic(UUID userId);
 }

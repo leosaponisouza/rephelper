@@ -293,4 +293,32 @@ public class RepublicController {
         return ResponseEntity.ok(response);
     }
 
+    @DeleteMapping("/{republicId}/members/{memberId}")
+    @Operation(summary = "Remove member", description = "Remove a user from a republic by clearing their current_republic_id")
+    public ResponseEntity<ApiResponse> removeMember(
+            @PathVariable UUID republicId,
+            @PathVariable UUID memberId,
+            @AuthenticationPrincipal CustomUserDetails currentUser) {
+
+        // Get current republic
+        Republic republic = republicService.getRepublicById(republicId);
+
+        // Check if user is owner, admin or the user themselves
+        boolean isSystemAdmin = "admin".equals(currentUser.getRole());
+        boolean isOwner = republic.getOwner().getId().equals(currentUser.getUserId());
+        boolean isRepublicAdmin = republic.isAdmin(userService.getUserById(currentUser.getUserId()));
+        boolean isSelfRemoval = currentUser.getUserId().equals(memberId);
+
+        if (!isSystemAdmin && !isOwner && !isRepublicAdmin && !isSelfRemoval) {
+            throw new ForbiddenException("You do not have permission to remove members from this republic");
+        }
+
+        // Remove user from republic (clear current_republic_id)
+        userService.removeFromRepublic(memberId);
+
+        return ResponseEntity.ok(ApiResponse.builder()
+                .status("success")
+                .message("User removed from republic successfully")
+                .build());
+    }
 }
